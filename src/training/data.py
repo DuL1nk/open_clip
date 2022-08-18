@@ -48,6 +48,33 @@ class CsvDataset(Dataset):
         return images, texts
 
 
+class JsonDataset(Dataset):
+    def __init__(self, input_filename, transforms):
+        logging.debug(f'Loading json data from {input_filename}.')
+        lines = open(input_filename).readlines()
+        self.images = []
+        self.captions = []
+        self.transforms = transforms
+        self.image_root_dir = '/mnt/search01/dataset/yfcc15m/data/'
+        for line in lines:
+            line = json.loads(line)
+            self.images.append(os.path.join(self.image_root_dir, line['filename']))
+            self.captions.append(line['caption'])
+        logging.debug('Done loading data.')
+
+    def __len__(self):
+        return len(self.captions)
+
+    def __getitem__(self, idx):
+        try:
+            images = self.transforms(Image.open(str(self.images[idx])))
+        except:
+            import pdb;
+            pdb.set_trace()
+        texts = tokenize([str(self.captions[idx])])[0]
+        return images, texts
+
+
 class SharedEpoch:
     def __init__(self, epoch: int = 0):
         self.shared_epoch = Value('i', epoch)
@@ -250,12 +277,12 @@ class ResampledShards2(IterableDataset):
     """An iterable dataset yielding a list of urls."""
 
     def __init__(
-        self,
-        urls,
-        nshards=sys.maxsize,
-        worker_seed=None,
-        deterministic=False,
-        epoch=-1,
+            self,
+            urls,
+            nshards=sys.maxsize,
+            worker_seed=None,
+            deterministic=False,
+            epoch=-1,
     ):
         """Sample shards from the shard list with replacement.
 
@@ -419,28 +446,56 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
     return DataInfo(dataloader, sampler)
 
 
+def get_json_dataset(args, preprocess_fn, is_train, epoch=0):
+    input_filename = args.train_data if is_train else args.val_data
+    assert input_filename
+    dataset = JsonDataset(
+        input_filename,
+        preprocess_fn)
+    num_samples = len(dataset)
+    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    shuffle = is_train and sampler is None
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        num_workers=args.workers,
+        pin_memory=True,
+        sampler=sampler,
+        drop_last=is_train,
+    )
+    dataloader.num_samples = num_samples
+    dataloader.num_batches = len(dataloader)
+
+    return DataInfo(dataloader, sampler)
+
+
 def get_dataset_fn(data_path, dataset_type):
     if dataset_type == "webdataset":
         return get_wds_dataset
     elif dataset_type == "csv":
         return get_csv_dataset
+    elif dataset_type == 'json':
+        return get_json_dataset
     elif dataset_type == "auto":
         ext = data_path.split('.')[-1]
         if ext in ['csv', 'tsv']:
             return get_csv_dataset
         elif ext in ['tar']:
             return get_wds_dataset
+        elif ext in ['json']:
+            return get_json_dataset
         else:
             raise ValueError(
                 f"Tried to figure out dataset type, but failed for extention {ext}.")
     else:
         raise ValueError(f"Unsupported dataset type: {dataset_type}")
-    
+
 
 def get_data(args, preprocess_fns, epoch=0):
     preprocess_train, preprocess_val = preprocess_fns
     data = {}
-
     if args.train_data:
         data["train"] = get_dataset_fn(args.train_data, args.dataset_type)(
             args, preprocess_train, is_train=True, epoch=epoch)
