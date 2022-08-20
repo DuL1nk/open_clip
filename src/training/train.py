@@ -71,9 +71,11 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         step = num_batches_per_epoch * epoch + i
         scheduler(step)
 
+        import pdb; pdb.set_trace()
         images, texts = batch
-        texts = tokenize([texts])[0]
-        texts_aug = tokenize([texts], mask_type='MLM')[0]
+        texts_aug = texts
+        texts = tokenize(texts)
+        texts_aug = tokenize(texts_aug, mask=True, resample=True)
         images = images.to(device=device, non_blocking=True)
         texts = texts.to(device=device, non_blocking=True)
 

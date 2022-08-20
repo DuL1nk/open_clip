@@ -1,6 +1,6 @@
 import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
-from mask_tokens import MaskTokens
+from open_clip.mask_tokens import MaskTokens
 
 
 PRETRAINED_ELECTRA_GENERATORS = {
@@ -16,7 +16,7 @@ generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['sm
 
 
 def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
-    assert mask and ~resample, 'mask is required for enabling resample!'
+    assert mask or ~resample, 'mask is required for enabling resample!'
 
     unmask_flag = -1
     sot_token = tokenizer.encode('[CLS]')[1]
@@ -30,12 +30,13 @@ def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
         if len(tokens) > context_length:
             tokens = tokens[:context_length]  # Truncate
             tokens[-1] = eot_token
-        all_tokens[i, :len(tokens)] = torch.tensor(tokens)
+        all_tokens[i] = torch.tensor(tokens)
 
     if mask:
+        import copy
         special_tokens = [sot_token, eot_token, mask_token]
-        masked_tokens = [MaskTokens(tokens, mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
-                                    tokenizer_length=tokenizer.vocab_size, unmask_flag=unmask_flag) for tokens in all_tokens]
+        masked_tokens = [MaskTokens(copy.deepcopy(tokens), mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
+                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.15, unmask_flag=unmask_flag) for tokens in all_tokens]
         all_tokens = [item[0] for item in masked_tokens]
         all_labels = [item[1] for item in masked_tokens]
 
@@ -53,10 +54,10 @@ def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
     if resample:
         pad_mask = result != pad_token
         logits = generator(result, pad_mask)[0]
-        sampled_logits = logits[labels == mask_token]
+        sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
-        generate[labels == mask_token] = sampled_tokens.detach()
+        generate[labels != unmask_flag] = sampled_tokens.detach()
         return generate
     if mask:
         return result, labels, token_lengths
