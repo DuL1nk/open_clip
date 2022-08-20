@@ -14,9 +14,10 @@ try:
 except ImportError:
     wandb = None
 
-from open_clip import ClipLoss
+from open_clip import ClipLoss, tokenize
 from .distributed import is_master
 from .zero_shot import zero_shot_eval
+
 
 
 class AverageMeter(object):
@@ -71,6 +72,8 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         scheduler(step)
 
         images, texts = batch
+        texts = tokenize([texts])[0]
+        texts_aug = tokenize([texts], mask_type='MLM')[0]
         images = images.to(device=device, non_blocking=True)
         texts = texts.to(device=device, non_blocking=True)
 
@@ -173,6 +176,7 @@ def evaluate(model, data, epoch, args, tb_writer=None):
         with torch.no_grad():
             for i, batch in enumerate(dataloader):
                 images, texts = batch
+                texts = tokenize([texts])[0]
                 images = images.to(device=device, non_blocking=True)
                 texts = texts.to(device=device, non_blocking=True)
 

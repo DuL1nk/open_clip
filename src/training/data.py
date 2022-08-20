@@ -66,12 +66,9 @@ class JsonDataset(Dataset):
         return len(self.captions)
 
     def __getitem__(self, idx):
-        try:
-            images = self.transforms(Image.open(str(self.images[idx])))
-        except:
-            import pdb;
-            pdb.set_trace()
-        texts = tokenize([str(self.captions[idx])])[0]
+        images = self.transforms(Image.open(str(self.images[idx])))
+        # texts = tokenize([str(self.captions[idx])])[0]
+        texts = str(self.captions[idx])
         return images, texts
 
 
