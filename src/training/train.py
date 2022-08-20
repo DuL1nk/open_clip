@@ -51,6 +51,7 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
 
     model.train()
     loss = ClipLoss(
+        batch_size=args.batch_size,
         local_loss=args.local_loss,
         gather_with_grad=args.gather_with_grad,
         cache_labels=True,
@@ -71,20 +72,39 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         step = num_batches_per_epoch * epoch + i
         scheduler(step)
 
-        import pdb; pdb.set_trace()
         images, texts = batch
         texts_aug = texts
         texts = tokenize(texts)
         texts_aug = tokenize(texts_aug, mask=True, resample=True)
         images = images.to(device=device, non_blocking=True)
-        texts = texts.to(device=device, non_blocking=True)
+        texts = torch.cat([texts, texts_aug], dim=0).to(device=device, non_blocking=True)
 
         data_time_m.update(time.time() - end)
         optimizer.zero_grad()
 
         with autocast():
             image_features, text_features, logit_scale = model(images, texts)
-            total_loss = loss(image_features, text_features, logit_scale)
+            text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
+            blank_tensor = torch.Tensor(0,1024).to(device=device, non_blocking=True)
+            total_loss = loss(image_features, text_features, logit_scale, image_aug_features=blank_tensor, text_aug_features=text_aug_features)
+
+            # FIXME: why loss differs between forward 1&2 with ddp
+            # loss_forward 2
+            # loss0 = loss(image_features, text_features, logit_scale, blank_tensor, blank_tensor)
+            # loss1 = loss(image_features, text_features, logit_scale, blank_tensor, text_features)
+            # loss2 = loss(image_features, text_features, logit_scale, blank_tensor, text_aug_features)
+
+            # loss_forward 1
+            # image_features, text_features0, logit_scale = model(images, texts0)
+            # image_features, text_features1, logit_scale = model(images, texts1)
+            # image_features, text_features2, logit_scale = model(images, texts2)
+            #
+            # loss0 = loss(image_features, text_features0, logit_scale)
+            # loss1 = loss(image_features, text_features1, logit_scale)
+            # loss2 = loss(image_features, text_features2, logit_scale)
+
+            # print(loss0, loss1, loss2)
+
 
         if scaler is not None:
             scaler.scale(total_loss).backward()

@@ -252,6 +252,7 @@ def main():
         if is_master(args):
             logging.info(f'Start epoch {epoch}')
 
+        #import pdb; pdb.set_trace()
         train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 
