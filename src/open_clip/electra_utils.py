@@ -66,9 +66,9 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         generate[labels != unmask_flag] = sampled_tokens.detach()
         t4 = time.time()
 
-        print('tokenize costs ', t2-t1)
-        print('mask costs ', t3-t2)
-        print('generate costs ', t4-t3)
+        # print('tokenize costs ', t2-t1)
+        # print('mask costs ', t3-t2)
+        # print('generate costs ', t4-t3)
         return generate
     if mask:
         return result, labels, token_lengths
