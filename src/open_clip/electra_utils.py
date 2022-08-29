@@ -55,9 +55,11 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
             labels[i, :len(tokens)] = all_labels[i]
     t3 = time.time()
 
+    result = result.to(device, non_blocking=True)
+
     if generator:
         pad_mask = result != pad_token
-        logits = generator(result.to(device), pad_mask)[0]
+        logits = generator(result, pad_mask)[0]
         sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
