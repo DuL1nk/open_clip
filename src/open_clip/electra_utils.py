@@ -16,7 +16,7 @@ tokenizer = ElectraTokenizerFast.from_pretrained(ELECTRA_TOKENIZER_VOCAB)
 # generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['small'])
 
 
-def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1.):
+def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., device='cpu'):
     assert mask or not generator, 'mask is required for enabling resample!'
 
     t1 = time.time()
@@ -57,7 +57,7 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1.):
 
     if generator:
         pad_mask = result != pad_token
-        logits = generator(result, pad_mask)[0]
+        logits = generator(result.to(device), pad_mask)[0]
         sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
