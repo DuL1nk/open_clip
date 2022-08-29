@@ -85,7 +85,7 @@ def main():
     args.wandb = 'wandb' in args.report_to or 'all' in args.report_to
     args.tensorboard = 'tensorboard' in args.report_to or 'all' in args.report_to
     if is_master(args):
-        dan_path = os.path.join(args.logs, args.name, "tensorboard") if args.tensorboard else ''
+        args.tensorboard_path = os.path.join(args.logs, args.name, "tensorboard") if args.tensorboard else ''
         args.checkpoint_path = os.path.join(args.logs, args.name, "checkpoints")
         for dirname in [args.tensorboard_path, args.checkpoint_path]:
             if dirname:
