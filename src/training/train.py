@@ -74,7 +74,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
 
         images, texts = batch
         texts_aug = texts
-        texts = tokenize(texts)
+        texts = tokenize(texts, device=device)
         texts_aug = tokenize(texts_aug, mask=True, generator=electra_generator, device=device)
         images = images.to(device=device, non_blocking=True)
         texts = torch.cat([texts, texts_aug], dim=0)
