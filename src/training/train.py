@@ -45,7 +45,7 @@ def unwrap_model(model):
         return model
 
 
-def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None):
+def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None):
     device = torch.device(args.device)
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
 
@@ -75,7 +75,7 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         images, texts = batch
         texts_aug = texts
         texts = tokenize(texts)
-        texts_aug = tokenize(texts_aug, mask=True, resample=True)
+        texts_aug = tokenize(texts_aug, mask=True, generator=electra_generator)
         images = images.to(device=device, non_blocking=True)
         texts = torch.cat([texts, texts_aug], dim=0).to(device=device, non_blocking=True)
 

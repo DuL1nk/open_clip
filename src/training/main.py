@@ -31,6 +31,8 @@ from training.params import parse_args
 from training.scheduler import cosine_lr
 from training.train import train_one_epoch, evaluate
 
+from transformers import ElectraForMaskedLM
+from open_clip.electra_utils import PRETRAINED_ELECTRA_GENERATORS
 
 def random_seed(seed=42, rank=0):
     torch.manual_seed(seed + rank)
@@ -83,7 +85,7 @@ def main():
     args.wandb = 'wandb' in args.report_to or 'all' in args.report_to
     args.tensorboard = 'tensorboard' in args.report_to or 'all' in args.report_to
     if is_master(args):
-        args.tensorboard_path = os.path.join(args.logs, args.name, "tensorboard") if args.tensorboard else ''
+        dan_path = os.path.join(args.logs, args.name, "tensorboard") if args.tensorboard else ''
         args.checkpoint_path = os.path.join(args.logs, args.name, "checkpoints")
         for dirname in [args.tensorboard_path, args.checkpoint_path]:
             if dirname:
@@ -123,6 +125,7 @@ def main():
         pretrained_image=args.pretrained_image,
     )
     random_seed(args.seed, args.rank)
+    electra_generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['small']).to(device)
 
     if args.trace:
         model = trace_model(model, batch_size=args.batch_size, device=device)
@@ -155,6 +158,7 @@ def main():
             # this doesn't exist in older PyTorch, arg only added if enabled
             ddp_args['static_graph'] = True
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device], **ddp_args)
+        electra_generator = torch.nn.parallel.DistributedDataParallel(electra_generator, device_ids=[device], **ddp_args)
 
     # create optimizer and scaler
     optimizer = None
@@ -253,7 +257,7 @@ def main():
             logging.info(f'Start epoch {epoch}')
 
         #import pdb; pdb.set_trace()
-        train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, writer)
+        train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2')):

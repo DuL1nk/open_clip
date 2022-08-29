@@ -1,6 +1,7 @@
 import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
 from open_clip.mask_tokens import MaskTokens
+import time
 
 
 PRETRAINED_ELECTRA_GENERATORS = {
@@ -12,12 +13,13 @@ PRETRAINED_ELECTRA_GENERATORS = {
 ELECTRA_TOKENIZER_VOCAB = "../electra_configs/vocab/"
 
 tokenizer = ElectraTokenizerFast.from_pretrained(ELECTRA_TOKENIZER_VOCAB)
-generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['small'])
+# generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['small'])
 
 
-def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
-    assert mask or ~resample, 'mask is required for enabling resample!'
+def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1.):
+    assert mask or not generator, 'mask is required for enabling resample!'
 
+    t1 = time.time()
     unmask_flag = -1
     sot_token = tokenizer.encode('[CLS]')[1]
     eot_token = tokenizer.encode('[SEP]')[1]
@@ -31,6 +33,7 @@ def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
             tokens = tokens[:context_length]  # Truncate
             tokens[-1] = eot_token
         all_tokens[i] = torch.tensor(tokens)
+    t2 = time.time()
 
     if mask:
         import copy
@@ -50,14 +53,20 @@ def tokenize(texts, context_length=77, mask=False, resample=False, gumbel_t=1.):
         token_lengths[i] = min(len(tokens), context_length)
         if mask:
             labels[i, :len(tokens)] = all_labels[i]
+    t3 = time.time()
 
-    if resample:
+    if generator:
         pad_mask = result != pad_token
         logits = generator(result, pad_mask)[0]
         sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
         generate[labels != unmask_flag] = sampled_tokens.detach()
+        t4 = time.time()
+
+        print('tokenize costs ', t2-t1)
+        print('mask costs ', t3-t2)
+        print('generate costs ', t4-t3)
         return generate
     if mask:
         return result, labels, token_lengths
