@@ -63,12 +63,20 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
-        generate[labels != unmask_flag] = sampled_tokens.detach()
+        generate[labels != unmask_flag] = sampled_tokens
         t4 = time.time()
 
         # print('tokenize costs ', t2-t1)
         # print('mask costs ', t3-t2)
         # print('generate costs ', t4-t3)
+        de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for
+                    tmp in generate]
+        import pdb; pdb.set_trace()
+        # generator.electra.encoder.layer[0].output.dense.weight
+        for i in range(len(texts)):
+            print(texts[i])
+            print(de_texts[i])
+            print()
         return generate
     if mask:
         return result, labels, token_lengths
