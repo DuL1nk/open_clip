@@ -39,7 +39,7 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         import copy
         special_tokens = [sot_token, eot_token, mask_token]
         masked_tokens = [MaskTokens(copy.deepcopy(tokens), mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
-                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.15, unmask_flag=unmask_flag) for tokens in all_tokens]
+                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.3, unmask_flag=unmask_flag) for tokens in all_tokens]
         all_tokens = [item[0] for item in masked_tokens]
         all_labels = [item[1] for item in masked_tokens]
 

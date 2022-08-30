@@ -17,13 +17,13 @@ def mask_tokens(inputs, special_tokens, mask_token, tokenizer_length, mlm_probab
     labels[~masked_indices] = unmask_flag  # We only compute loss on masked tokens
 
     # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-    indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
+    indices_replaced = torch.bernoulli(torch.full(labels.shape, 1)).bool() & masked_indices
     inputs[indices_replaced] = mask_token
 
     # 10% of the time, we replace masked input tokens with random word
-    indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
-    random_words = torch.randint(tokenizer_length, labels.shape, dtype=torch.long)
-    inputs[indices_random] = random_words[indices_random]
+    # indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+    # random_words = torch.randint(tokenizer_length, labels.shape, dtype=torch.long)
+    # inputs[indices_random] = random_words[indices_random]
 
     # The rest of the time (10% of the time) we keep the masked input tokens unchanged
     return inputs, labels
