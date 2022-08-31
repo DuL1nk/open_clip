@@ -34,6 +34,9 @@ from training.train import train_one_epoch, evaluate
 from transformers import ElectraForMaskedLM
 from open_clip.electra_utils import PRETRAINED_ELECTRA_GENERATORS
 
+
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 def random_seed(seed=42, rank=0):
     torch.manual_seed(seed + rank)
     np.random.seed(seed + rank)
