@@ -17,7 +17,7 @@ def mask_tokens(inputs, special_tokens, mask_token, tokenizer_length, mlm_probab
     labels[~masked_indices] = unmask_flag  # We only compute loss on masked tokens
 
     # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-    indices_replaced = torch.bernoulli(torch.full(labels.shape, 1)).bool() & masked_indices
+    indices_replaced = torch.bernoulli(torch.full(labels.shape, 1.0)).bool() & masked_indices
     inputs[indices_replaced] = mask_token
 
     # 10% of the time, we replace masked input tokens with random word

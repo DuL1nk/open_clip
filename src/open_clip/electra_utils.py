@@ -43,6 +43,7 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         all_tokens = [item[0] for item in masked_tokens]
         all_labels = [item[1] for item in masked_tokens]
 
+
     # pad_token is 0
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
     labels = torch.ones(len(all_tokens), context_length, dtype=torch.long) * unmask_flag
@@ -71,12 +72,10 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         # print('generate costs ', t4-t3)
         de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for
                     tmp in generate]
-        import pdb; pdb.set_trace()
-        # generator.electra.encoder.layer[0].output.dense.weight
-        for i in range(len(texts)):
-            print(texts[i])
-            print(de_texts[i])
-            print()
+        # for i in range(len(texts)):
+        #     print(texts[i])
+        #     print(de_texts[i])
+        #     print()
         return generate
     if mask:
         return result, labels, token_lengths
