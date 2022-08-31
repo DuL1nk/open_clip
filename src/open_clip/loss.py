@@ -17,9 +17,55 @@ except ImportError:
     hvd = None
 
 
+# def gather_features(
+#         image_features,
+#         text_features,
+#         local_loss=False,
+#         gather_with_grad=False,
+#         rank=0,
+#         world_size=1,
+#         use_horovod=False
+# ):
+#     assert has_distributed, 'torch.distributed did not import correctly, please use a PyTorch version with support.'
+#     if use_horovod:
+#         assert hvd is not None, 'Please install horovod'
+#         if gather_with_grad:
+#             all_image_features = hvd.allgather(image_features)
+#             all_text_features = hvd.allgather(text_features)
+#         else:
+#             with torch.no_grad():
+#                 all_image_features = hvd.allgather(image_features)
+#                 all_text_features = hvd.allgather(text_features)
+#             if not local_loss:
+#                 # ensure grads for local rank when all_* features don't have a gradient
+#                 gathered_image_features = list(all_image_features.chunk(world_size, dim=0))
+#                 gathered_text_features = list(all_text_features.chunk(world_size, dim=0))
+#                 gathered_image_features[rank] = image_features
+#                 gathered_text_features[rank] = text_features
+#                 all_image_features = torch.cat(gathered_image_features, dim=0)
+#                 all_text_features = torch.cat(gathered_text_features, dim=0)
+#     else:
+#         # We gather tensors from all gpus
+#         if gather_with_grad:
+#             all_image_features = torch.cat(torch.distributed.nn.all_gather(image_features), dim=0)
+#             all_text_features = torch.cat(torch.distributed.nn.all_gather(text_features), dim=0)
+#         else:
+#             gathered_image_features = [torch.zeros_like(image_features) for _ in range(world_size)]
+#             gathered_text_features = [torch.zeros_like(text_features) for _ in range(world_size)]
+#             dist.all_gather(gathered_image_features, image_features)
+#             dist.all_gather(gathered_text_features, text_features)
+#             if not local_loss:
+#                 # ensure grads for local rank when all_* features don't have a gradient
+#                 gathered_image_features[rank] = image_features
+#                 gathered_text_features[rank] = text_features
+#             all_image_features = torch.cat(gathered_image_features, dim=0)
+#             all_text_features = torch.cat(gathered_text_features, dim=0)
+#
+#     return all_image_features, all_text_features
+
+
 def gather_features(
-        image_features,
-        text_features,
+        features,
         local_loss=False,
         gather_with_grad=False,
         rank=0,
@@ -27,42 +73,33 @@ def gather_features(
         use_horovod=False
 ):
     assert has_distributed, 'torch.distributed did not import correctly, please use a PyTorch version with support.'
+    if features is None:
+        return None
     if use_horovod:
         assert hvd is not None, 'Please install horovod'
         if gather_with_grad:
-            all_image_features = hvd.allgather(image_features)
-            all_text_features = hvd.allgather(text_features)
+            all_features = hvd.allgather(features)
         else:
             with torch.no_grad():
-                all_image_features = hvd.allgather(image_features)
-                all_text_features = hvd.allgather(text_features)
+                all_features = hvd.allgather(features)
             if not local_loss:
                 # ensure grads for local rank when all_* features don't have a gradient
-                gathered_image_features = list(all_image_features.chunk(world_size, dim=0))
-                gathered_text_features = list(all_text_features.chunk(world_size, dim=0))
-                gathered_image_features[rank] = image_features
-                gathered_text_features[rank] = text_features
-                all_image_features = torch.cat(gathered_image_features, dim=0)
-                all_text_features = torch.cat(gathered_text_features, dim=0)
+                gathered_features = list(all_features.chunk(world_size, dim=0))
+                gathered_features[rank] = features
+                all_features = torch.cat(gathered_features, dim=0)
     else:
         # We gather tensors from all gpus
         if gather_with_grad:
-            all_image_features = torch.cat(torch.distributed.nn.all_gather(image_features), dim=0)
-            all_text_features = torch.cat(torch.distributed.nn.all_gather(text_features), dim=0)
+            all_features = torch.cat(torch.distributed.nn.all_gather(features), dim=0)
         else:
-            gathered_image_features = [torch.zeros_like(image_features) for _ in range(world_size)]
-            gathered_text_features = [torch.zeros_like(text_features) for _ in range(world_size)]
-            dist.all_gather(gathered_image_features, image_features)
-            dist.all_gather(gathered_text_features, text_features)
+            gathered_features = [torch.zeros_like(features) for _ in range(world_size)]
+            dist.all_gather(gathered_features, features)
             if not local_loss:
                 # ensure grads for local rank when all_* features don't have a gradient
-                gathered_image_features[rank] = image_features
-                gathered_text_features[rank] = text_features
-            all_image_features = torch.cat(gathered_image_features, dim=0)
-            all_text_features = torch.cat(gathered_text_features, dim=0)
+                gathered_features[rank] = features
+            all_features = torch.cat(gathered_features, dim=0)
 
-    return all_image_features, all_text_features
-
+    return all_features
 
 class ClipLoss(nn.Module):
 
@@ -135,10 +172,11 @@ class ClipLoss(nn.Module):
     #         ) / 2
     #     return total_loss
 
+
     def forward(self, image_features, text_features, logit_scale, image_aug_features=None, text_aug_features=None):
         device = image_features.device
-        if self.world_size >= 1:
-            pdb.set_trace()
+        if self.world_size > 1:
+
             all_image_features, all_text_features = gather_features(
                 image_features, text_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
@@ -158,6 +196,7 @@ class ClipLoss(nn.Module):
             logits_per_text = logit_scale * text_features @ torch.cat([image_features, image_aug_features], dim=0).T
 
         # calculated ground-truth and cache if enabled
+        pdb.set_trace()
         num_logits = logits_per_image.shape[0]
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
@@ -174,4 +213,52 @@ class ClipLoss(nn.Module):
             F.cross_entropy(logits_per_text, labels)
             ) / 2
         return total_loss
+
+
+    # def forward(self, image_features, text_features, logit_scale, image_aug_features=None, text_aug_features=None):
+    #     device = image_features.device
+    #     if self.world_size >= 1:
+    #         pdb.set_trace()
+    #
+    #         all_image_features = gather_features(image_features, self.local_loss, self.gather_with_grad, self.rank,
+    #                                              self.world_size, self.use_horovod)
+    #         all_text_features = gather_features(text_features, self.local_loss, self.gather_with_grad, self.rank,
+    #                                              self.world_size, self.use_horovod)
+    #         all_image_aug_features = gather_features(image_aug_features, self.local_loss, self.gather_with_grad, self.rank,
+    #                                              self.world_size, self.use_horovod)
+    #         all_text_aug_features = gather_features(text_aug_features, self.local_loss, self.gather_with_grad, self.rank,
+    #                                              self.world_size, self.use_horovod)
+    #
+    #         _all_image_features = all_image_features if image_aug_features is None else torch.cat([all_image_features, all_image_aug_features], dim=0)
+    #         _all_text_features = all_text_features if text_aug_features is None else torch.cat([all_text_features, all_text_aug_features], dim=0)
+    #
+    #         if self.local_loss:
+    #             logits_per_image = logit_scale * image_features @ _all_text_features.T
+    #             logits_per_text = logit_scale * text_features @ _all_image_features.T
+    #         else:
+    #             logits_per_image = logit_scale * all_image_features @ _all_text_features.T
+    #             logits_per_text = logit_scale * all_text_features @ _all_image_features.T
+    #     else:
+    #         _image_features = image_features if image_aug_features is None else torch.cat([image_features, image_aug_features], dim=0)
+    #         _text_features = text_features if text_aug_features is None else torch.cat([text_features, text_aug_features], dim=0)
+    #         logits_per_image = logit_scale * image_features @ _text_features.T
+    #         logits_per_text = logit_scale * text_features @ _image_features.T
+    #
+    #     # calculated ground-truth and cache if enabled
+    #     num_logits = logits_per_image.shape[0]
+    #     if self.prev_num_logits != num_logits or device not in self.labels:
+    #         labels = torch.arange(num_logits, device=device, dtype=torch.long)
+    #         if self.world_size > 1 and self.local_loss:
+    #             labels = labels + num_logits * self.rank
+    #         if self.cache_labels:
+    #             self.labels[device] = labels
+    #             self.prev_num_logits = num_logits
+    #     else:
+    #         labels = self.labels[device]
+    #
+    #     total_loss = (
+    #         F.cross_entropy(logits_per_image, labels) +
+    #         F.cross_entropy(logits_per_text, labels)
+    #         ) / 2
+    #     return total_loss
 
