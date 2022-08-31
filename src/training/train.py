@@ -72,11 +72,10 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         step = num_batches_per_epoch * epoch + i
         scheduler(step)
 
-        images, texts = batch
-        texts_aug = texts
-        texts = tokenize(texts, device=device)
-        texts_aug = tokenize(texts_aug, mask=True, generator=electra_generator, device=device)
-        images = images.to(device=device, non_blocking=True)
+        input_images, input_texts = batch
+        texts = tokenize(input_texts, device=device)
+        texts_aug = tokenize(input_texts, mask=True, generator=electra_generator, device=device)
+        images = input_images.to(device=device, non_blocking=True)
         texts = torch.cat([texts, texts_aug], dim=0)
 
         data_time_m.update(time.time() - end)
@@ -85,7 +84,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         with autocast():
             image_features, text_features, logit_scale = model(images, texts)
             text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
-            blank_tensor = torch.Tensor(0,1024).to(device=device, non_blocking=True)
+            blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
             total_loss = loss(image_features, text_features, logit_scale, image_aug_features=blank_tensor, text_aug_features=text_aug_features)
 
             # FIXME: why loss differs between forward 1&2 with ddp
