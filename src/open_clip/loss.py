@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -135,7 +137,8 @@ class ClipLoss(nn.Module):
 
     def forward(self, image_features, text_features, logit_scale, image_aug_features=None, text_aug_features=None):
         device = image_features.device
-        if self.world_size > 1:
+        if self.world_size >= 1:
+            pdb.set_trace()
             all_image_features, all_text_features = gather_features(
                 image_features, text_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
