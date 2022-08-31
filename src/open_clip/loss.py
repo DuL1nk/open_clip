@@ -247,7 +247,6 @@ class ClipLoss(nn.Module):
             logits_per_text = logit_scale * text_features @ torch.cat([image_features, image_aug_features], dim=0).T
 
         # calculated ground-truth and cache if enabled
-        pdb.set_trace()
         num_logits = logits_per_image.shape[0]
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
