@@ -68,6 +68,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
     batch_time_m = AverageMeter()
     data_time_m = AverageMeter()
     end = time.time()
+    logging.info(args.name)
     for i, batch in enumerate(dataloader):
         step = num_batches_per_epoch * epoch + i
         scheduler(step)
