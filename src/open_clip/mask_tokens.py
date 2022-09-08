@@ -32,9 +32,9 @@ def mask_tokens(inputs, pre_mask, special_tokens, mask_token, tokenizer_length, 
     return inputs, labels
 
 
-def MaskTokens(tokens, mask_type, mask_token, special_tokens=None, tokenizer_length=None, mlm_probability=0.15, unmask_flag=-1, special_tokens_mask=None):
+def MaskTokens(tokens, pre_mask, mask_type, mask_token, special_tokens=None, tokenizer_length=None, mlm_probability=0.15, unmask_flag=-1, special_tokens_mask=None):
     if mask_type == 'MLM':
-        tokens, labels = mask_tokens(inputs=tokens, special_tokens=special_tokens, mask_token=mask_token, tokenizer_length=tokenizer_length, mlm_probability=mlm_probability, unmask_flag=unmask_flag, special_tokens_mask=special_tokens_mask)
+        tokens, labels = mask_tokens(inputs=tokens, pre_mask=pre_mask, special_tokens=special_tokens, mask_token=mask_token, tokenizer_length=tokenizer_length, mlm_probability=mlm_probability, unmask_flag=unmask_flag, special_tokens_mask=special_tokens_mask)
     else:
         raise NotImplementedError(mask_type)
     return tokens, labels
