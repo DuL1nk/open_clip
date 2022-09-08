@@ -4,7 +4,7 @@ import torch
 from typing import Tuple, List
 
 
-def mask_tokens(inputs, pre_mask_indices, special_tokens, mask_token, tokenizer_length, mlm_probability, unmask_flag, special_tokens_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
+def mask_tokens(inputs, pre_mask, special_tokens, mask_token, tokenizer_length, mlm_probability, unmask_flag, special_tokens_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
     """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """
     pdb.set_trace()
     labels = inputs.clone()
