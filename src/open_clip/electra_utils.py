@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
 from open_clip.mask_tokens import MaskTokens
@@ -41,12 +43,14 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
     pad_token = tokenizer.encode('[PAD]')[1]
     mask_token = tokenizer.encode('[MASK]')[1]
 
+    all_tokens = [tokenizer.encode(text) for text in texts]
+    all_labels = []
+    pre_mask_indices = [[0] * len(tokens) for tokens in all_tokens]
+
     if word_parsing:
         import nltk
         pre_mask_indices = [parse_text_and_mask(text) for text in texts]
-
-    all_tokens = [tokenizer.encode(text) for text in texts]
-    all_labels = []
+    pdb.set_trace()
 
     for i, tokens in enumerate(all_tokens):
         if len(tokens) > context_length:
