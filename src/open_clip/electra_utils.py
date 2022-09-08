@@ -36,7 +36,7 @@ def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
             words.append(pair[0])
 
 
-    return pos
+    return ' '.join(words)
 
 
 def truncate_tokens(all_tokens, truncate_length, eot_token):
