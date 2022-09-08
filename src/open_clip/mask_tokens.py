@@ -4,9 +4,8 @@ import torch
 from typing import Tuple, List
 
 
-def mask_tokens(inputs, pre_mask, special_tokens, mask_token, tokenizer_length, mlm_probability, unmask_flag, special_tokens_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
+def mask_tokens(inputs, special_tokens, mask_token, tokenizer_length, mlm_probability, unmask_flag, special_tokens_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
     """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """
-    pdb.set_trace()
     labels = inputs.clone()
     # We sample a few tokens in each sequence for masked-LM training (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
     probability_matrix = torch.full(labels.shape, mlm_probability)
@@ -32,9 +31,9 @@ def mask_tokens(inputs, pre_mask, special_tokens, mask_token, tokenizer_length, 
     return inputs, labels
 
 
-def MaskTokens(tokens, pre_mask, mask_type, mask_token, special_tokens=None, tokenizer_length=None, mlm_probability=0.15, unmask_flag=-1, special_tokens_mask=None):
+def MaskTokens(tokens, mask_type, mask_token, special_tokens=None, tokenizer_length=None, mlm_probability=0.15, unmask_flag=-1, special_tokens_mask=None):
     if mask_type == 'MLM':
-        tokens, labels = mask_tokens(inputs=tokens, pre_mask=pre_mask, special_tokens=special_tokens, mask_token=mask_token, tokenizer_length=tokenizer_length, mlm_probability=mlm_probability, unmask_flag=unmask_flag, special_tokens_mask=special_tokens_mask)
+        tokens, labels = mask_tokens(inputs=tokens, special_tokens=special_tokens, mask_token=mask_token, tokenizer_length=tokenizer_length, mlm_probability=mlm_probability, unmask_flag=unmask_flag, special_tokens_mask=special_tokens_mask)
     else:
         raise NotImplementedError(mask_type)
     return tokens, labels

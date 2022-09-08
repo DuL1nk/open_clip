@@ -4,6 +4,7 @@ import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
 from open_clip.mask_tokens import MaskTokens
 import time
+import numpy as np
 
 
 PRETRAINED_ELECTRA_GENERATORS = {
@@ -19,53 +20,81 @@ tokenizer = ElectraTokenizerFast.from_pretrained(ELECTRA_TOKENIZER_VOCAB)
 
 
 
-def parse_text_and_mask(text):
+def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
 
-    mask_pos = ['NN', 'NNS', 'NNP', 'NNPS'
+    mask_pos = ['NN', 'NNS', 'NNP', 'NNPS',
                 'JJ', 'JJR', 'JJS']
 
     import nltk
     text = nltk.wordpunct_tokenize(text)
     pos = nltk.pos_tag(text)
-    res = [pair[1] in mask_pos for pair in pos]
+    words = []
+    for pair in pos:
+        if pair[1] in mask_pos and np.random.random() < mask_prob:
+            words.append(mask)
+        else:
+            words.append(pair[0])
 
-    return res
+
+    return pos
 
 
+def truncate_tokens(all_tokens, truncate_length, eot_token):
+    for i, tokens in enumerate(all_tokens):
+        if len(tokens) > truncate_length:
+            tokens = tokens[:truncate_length]  # Truncate
+            tokens[-1] = eot_token
+        all_tokens[i] = torch.tensor(tokens)
+    return all_tokens
 
-def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., device='cpu', word_parsing=False):
-    assert mask or not generator, 'mask is required for enabling resample!'
+def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, generator=None, gumbel_t=1., device='cpu', show_generation=False):
+    assert mask_prob or not generator, 'mask is required for enabling resample!'
+    assert mask_prob or not word_parsing_mask, 'mask is required for enabling word parsing mask!'
 
-    t1 = time.time()
     unmask_flag = -1
     sot_token = tokenizer.encode('[CLS]')[1]
     eot_token = tokenizer.encode('[SEP]')[1]
     pad_token = tokenizer.encode('[PAD]')[1]
     mask_token = tokenizer.encode('[MASK]')[1]
 
-    all_tokens = [tokenizer.encode(text) for text in texts]
-    all_labels = []
-    pre_mask_indices = [[0] * len(tokens) for tokens in all_tokens]
-
-    if word_parsing:
-        import nltk
-        pre_mask_indices = [parse_text_and_mask(text) for text in texts]
+    pdb.set_trace()
+    if word_parsing_mask:
+        all_tokens = [tokenizer.encode(parse_text_and_mask(text, mask_prob)) for text in texts]
+        all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
+        all_labels = [(np.array(tokens) == mask_token).astype(int).tolist() for tokens in all_tokens]
+    else:
+        all_tokens = [tokenizer.encode(text) for text in texts]
+        all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
+        all_labels = []
+        if mask_prob:
+            import copy
+            masked_tokens = [MaskTokens(copy.deepcopy(tokens), mask_type='MLM', mask_token=mask_token,
+                                        special_tokens=[sot_token, eot_token, mask_token],
+                                        tokenizer_length=tokenizer.vocab_size, mlm_probability=mask_prob,
+                                        unmask_flag=unmask_flag) for tokens in all_tokens]
+            all_tokens = [item[0] for item in masked_tokens]
+            all_labels = [item[1] for item in masked_tokens]
     pdb.set_trace()
 
-    for i, tokens in enumerate(all_tokens):
-        if len(tokens) > context_length:
-            tokens = tokens[:context_length]  # Truncate
-            tokens[-1] = eot_token
-        all_tokens[i] = torch.tensor(tokens)
-    t2 = time.time()
-
-    if mask:
-        import copy
-        special_tokens = [sot_token, eot_token, mask_token]
-        masked_tokens = [MaskTokens(copy.deepcopy(all_tokens[i]), pre_mask=pre_mask_indices[i], mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
-                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.3, unmask_flag=unmask_flag) for i in range(len(all_tokens))]
-        all_tokens = [item[0] for item in masked_tokens]
-        all_labels = [item[1] for item in masked_tokens]
+    # all_tokens = [tokenizer.encode(text) for text in texts]
+    # all_labels = []
+    #
+    #
+    # # all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
+    # for i, tokens in enumerate(all_tokens):
+    #     if len(tokens) > context_length:
+    #         tokens = tokens[:context_length]  # Truncate
+    #         tokens[-1] = eot_token
+    #     all_tokens[i] = torch.tensor(tokens)
+    # t2 = time.time()
+    #
+    # if mask:
+    #     import copy
+    #     special_tokens = [sot_token, eot_token, mask_token]
+    #     masked_tokens = [MaskTokens(copy.deepcopy(all_tokens[i]), mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
+    #                                 tokenizer_length=tokenizer.vocab_size, mlm_probability=0.3, unmask_flag=unmask_flag) for i in range(len(all_tokens))]
+    #     all_tokens = [item[0] for item in masked_tokens]
+    #     all_labels = [item[1] for item in masked_tokens]
 
 
     # pad_token is 0
@@ -76,9 +105,9 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
     for i, tokens in enumerate(all_tokens):
         result[i, :len(tokens)] = tokens
         token_lengths[i] = min(len(tokens), context_length)
-        if mask:
+        if mask_prob:
             labels[i, :len(tokens)] = all_labels[i]
-    t3 = time.time()
+
 
     result = result.to(device, non_blocking=True)
 
@@ -89,19 +118,15 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
         generate[labels != unmask_flag] = sampled_tokens
-        t4 = time.time()
 
-        # print('tokenize costs ', t2-t1)
-        # print('mask costs ', t3-t2)
-        # print('generate costs ', t4-t3)
-        de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for
-                    tmp in generate]
-        # for i in range(len(texts)):
-        #     print(texts[i])
-        #     print(de_texts[i])
-        #     print()
+        if show_generation:
+            de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for tmp in generate]
+            for i in range(len(texts)):
+                print(texts[i])
+                print(de_texts[i])
+                print()
         return generate
-    if mask:
+    if mask_prob:
         return result, labels, token_lengths
     else:
         return result
