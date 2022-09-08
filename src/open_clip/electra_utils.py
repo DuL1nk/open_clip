@@ -35,8 +35,10 @@ def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
         else:
             words.append(pair[0])
 
-
-    return ' '.join(words)
+    if mask in words:
+        return ' '.join(words)
+    else:
+        return
 
 
 def truncate_tokens(all_tokens, truncate_length, eot_token):
@@ -57,8 +59,9 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
     pad_token = tokenizer.encode('[PAD]')[1]
     mask_token = tokenizer.encode('[MASK]')[1]
 
-    pdb.set_trace()
+
     if word_parsing_mask:
+        pdb.set_trace()
         all_tokens = [tokenizer.encode(parse_text_and_mask(text, mask_prob)) for text in texts]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
         all_labels = [(np.array(tokens) == mask_token).astype(int).tolist() for tokens in all_tokens]
@@ -74,7 +77,6 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
                                         unmask_flag=unmask_flag) for tokens in all_tokens]
             all_tokens = [item[0] for item in masked_tokens]
             all_labels = [item[1] for item in masked_tokens]
-    pdb.set_trace()
 
     # all_tokens = [tokenizer.encode(text) for text in texts]
     # all_labels = []
