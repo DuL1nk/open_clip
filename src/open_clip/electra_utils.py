@@ -16,7 +16,22 @@ tokenizer = ElectraTokenizerFast.from_pretrained(ELECTRA_TOKENIZER_VOCAB)
 # generator = ElectraForMaskedLM.from_pretrained(PRETRAINED_ELECTRA_GENERATORS['small'])
 
 
-def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., device='cpu'):
+
+def parse_text_and_mask(text):
+
+    mask_pos = ['NN', 'NNS', 'NNP', 'NNPS'
+                'JJ', 'JJR', 'JJS']
+
+    import nltk
+    text = nltk.wordpunct_tokenize(text)
+    pos = nltk.pos_tag(text)
+    res = [pair[1] in mask_pos for pair in pos]
+
+    return res
+
+
+
+def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., device='cpu', word_parsing=False):
     assert mask or not generator, 'mask is required for enabling resample!'
 
     t1 = time.time()
@@ -25,6 +40,11 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
     eot_token = tokenizer.encode('[SEP]')[1]
     pad_token = tokenizer.encode('[PAD]')[1]
     mask_token = tokenizer.encode('[MASK]')[1]
+
+    if word_parsing:
+        import nltk
+        pre_mask_indices = [parse_text_and_mask(text) for text in texts]
+
     all_tokens = [tokenizer.encode(text) for text in texts]
     all_labels = []
 
@@ -38,8 +58,8 @@ def tokenize(texts, context_length=77, mask=False, generator=None, gumbel_t=1., 
     if mask:
         import copy
         special_tokens = [sot_token, eot_token, mask_token]
-        masked_tokens = [MaskTokens(copy.deepcopy(tokens), mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
-                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.3, unmask_flag=unmask_flag) for tokens in all_tokens]
+        masked_tokens = [MaskTokens(copy.deepcopy(all_tokens[i]), pre_mask=pre_mask_indices[i], mask_type='MLM', mask_token=mask_token, special_tokens=special_tokens,
+                                    tokenizer_length=tokenizer.vocab_size, mlm_probability=0.3, unmask_flag=unmask_flag) for i in range(len(all_tokens))]
         all_tokens = [item[0] for item in masked_tokens]
         all_labels = [item[1] for item in masked_tokens]
 
