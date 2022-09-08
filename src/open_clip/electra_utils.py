@@ -121,7 +121,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         generate[labels != unmask_flag] = sampled_tokens
 
         if show_generation:
-            pdb.set_trace()
+            # pdb.set_trace()
             de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for tmp in generate]
             if word_parsing_mask:
                 texts = [texts[i] for i in range(len(mask_texts)) if mask_texts[i]]
