@@ -62,7 +62,8 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
 
     if word_parsing_mask:
         pdb.set_trace()
-        all_tokens = [tokenizer.encode(parse_text_and_mask(text, mask_prob)) for text in texts]
+        mask_texts = [parse_text_and_mask(text, mask_prob) for text in texts]
+        all_tokens = [tokenizer.encode(text) for text in mask_texts]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
         all_labels = [(np.array(tokens) == mask_token).astype(int).tolist() for tokens in all_tokens]
     else:
