@@ -59,12 +59,11 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
     pad_token = tokenizer.encode('[PAD]')[1]
     mask_token = tokenizer.encode('[MASK]')[1]
 
-
     if word_parsing_mask:
         mask_texts = [parse_text_and_mask(text, mask_prob) for text in texts]
         all_tokens = [tokenizer.encode(text) for text in mask_texts if text]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
-        all_labels = [torch.tensor((np.array(tokens) == mask_token).astype(int)) for tokens in all_tokens]
+        all_labels = [torch.tensor((np.array(tokens) != mask_token) * unmask_flag) for tokens in all_tokens]
     else:
         all_tokens = [tokenizer.encode(text) for text in texts]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
@@ -104,7 +103,6 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
     labels = torch.ones(len(all_tokens), context_length, dtype=torch.long) * unmask_flag
     token_lengths = torch.ones(len(all_tokens), dtype=torch.long)
 
-    pdb.set_trace()
     for i, tokens in enumerate(all_tokens):
         result[i, :len(tokens)] = tokens
         token_lengths[i] = min(len(tokens), context_length)
