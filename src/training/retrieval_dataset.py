@@ -46,13 +46,13 @@ class GenericDataset(data.Dataset):
             img_path = self.img_path
         else:
             coco_split_folder = image_name.split("_")[1]
-            img_path = self.img_path + coco_split_folder + '/'
+            img_path = os.path.join(self.img_path, coco_split_folder)
 
         short_caption = caption.split(' ')
         short_caption = short_caption[:max_context_len]
         caption = ' '.join(short_caption)
 
-        image = self.transform(Image.open(img_path + image_name))
+        image = self.transform(Image.open(os.path.join(img_path, image_name)))
 
         return image, caption, index, image_name
 
