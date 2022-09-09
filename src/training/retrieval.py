@@ -83,7 +83,7 @@ def run(model, dataloader, args):
 
 
     print('Computing results...')
-    img_embs, cap_embs = encode_data(model, dataloader)
+    img_embs, cap_embs = encode_data(model, dataloader, args)
 
 
     # evaluation
