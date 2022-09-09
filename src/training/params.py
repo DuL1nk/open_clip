@@ -149,6 +149,9 @@ def parse_args():
         "--zeroshot-frequency", type=int, default=1, help="How often to run zero shot."
     )
     parser.add_argument(
+        "--retrieval-frequency", type=int, default=1, help="How often to run retrieval."
+    )
+    parser.add_argument(
         "--val-frequency", type=int, default=1, help="How often to run evaluation with val data."
     )
     parser.add_argument(
