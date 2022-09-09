@@ -19,7 +19,7 @@ class GenericDataset(data.Dataset):
         self.data_name = data_name
 
 
-        self.img_path = os.path.join(root_path, 'val2014')
+        self.img_path = root_path
 
         img_file_path = os.path.join(root_path, "{}_{}_ims.txt".format(self.data_name, self.split))
         with open(img_file_path, "r") as fp:
