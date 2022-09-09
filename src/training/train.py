@@ -17,7 +17,7 @@ except ImportError:
 from open_clip import ClipLoss, tokenize
 from .distributed import is_master
 from .zero_shot import zero_shot_eval
-
+from .retrieval import retrieval_eval
 
 
 class AverageMeter(object):
@@ -184,6 +184,9 @@ def evaluate(model, data, epoch, args, tb_writer=None):
 
     zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
     metrics.update(zero_shot_metrics)
+
+    retrieval_metrics = retrieval_eval(model, data, epoch, args)
+    metrics.updata(retrieval_metrics)
 
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
     if 'val' in data and (args.val_frequency and ((epoch % args.val_frequency) == 0 or epoch == args.epochs)):

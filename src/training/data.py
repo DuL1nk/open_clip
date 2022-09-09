@@ -28,6 +28,7 @@ except ImportError:
 
 from open_clip import tokenize
 
+from retrieval_dataset import get_split_loader
 
 class CsvDataset(Dataset):
     def __init__(self, input_filename, transforms, img_key, caption_key, sep="\t"):
@@ -165,6 +166,19 @@ def get_imagenet(args, preprocess_fns, split):
         sampler=sampler,
     )
 
+    return DataInfo(dataloader=dataloader, sampler=sampler)
+
+
+def get_mscoco(args, preprocess_fns, split):
+    dataloader = get_split_loader(split, 'mscoco', args.batch_size, args.workers, args, preprocess_fns)
+    sampler = None
+    return DataInfo(dataloader=dataloader, sampler=sampler)
+
+
+def get_f30k(args, preprocess_fns, split):
+    raise NotImplementedError
+    dataloader = get_split_loader(split, 'f30k', args.batch_size, args.workers, args, preprocess_fns)
+    sampler = None
     return DataInfo(dataloader=dataloader, sampler=sampler)
 
 
@@ -506,5 +520,11 @@ def get_data(args, preprocess_fns, epoch=0):
 
     if args.imagenet_v2 is not None:
         data["imagenet-v2"] = get_imagenet(args, preprocess_fns, "v2")
+
+    if args.mscoco is not None:
+        data["mscoco"] = get_mscoco(args, preprocess_fns, "test")
+
+    if args.f30k is not None:
+        data["f30k"] = get_f30k(args, preprocess_fns, "test")
 
     return data
