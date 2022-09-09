@@ -524,7 +524,7 @@ def get_data(args, preprocess_fns, epoch=0):
     if args.coco_val is not None:
         data["mscoco"] = get_mscoco(args, preprocess_fns, "test")
 
-    if args.f30k is not None:
+    if args.f30k_val is not None:
         data["f30k"] = get_f30k(args, preprocess_fns, "test")
 
     return data

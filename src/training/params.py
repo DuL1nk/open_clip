@@ -85,6 +85,12 @@ def parse_args():
         help="Path to mscoco val set for conducting retrieval evaluation.",
     )
     parser.add_argument(
+        "--f30k-val",
+        type=str,
+        default=None,
+        help="Path to Flickr30k val set for conducting retrieval evaluation.",
+    )
+    parser.add_argument(
         "--logs",
         type=str,
         default="./logs/",
