@@ -186,7 +186,7 @@ def evaluate(model, data, epoch, args, tb_writer=None):
     metrics.update(zero_shot_metrics)
 
     retrieval_metrics = retrieval_eval(model, data, epoch, args)
-    metrics.updata(retrieval_metrics)
+    metrics.update(retrieval_metrics)
 
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
     if 'val' in data and (args.val_frequency and ((epoch % args.val_frequency) == 0 or epoch == args.epochs)):
