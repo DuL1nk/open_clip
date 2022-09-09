@@ -170,7 +170,8 @@ def get_imagenet(args, preprocess_fns, split):
 
 
 def get_mscoco(args, preprocess_fns, split):
-    dataloader = get_split_loader(split, 'mscoco', args.coco_val, args.batch_size, args.workers, preprocess_fns)
+    preprocess_train, preprocess_val = preprocess_fns
+    dataloader = get_split_loader(split, 'mscoco', args.coco_val, args.batch_size, args.workers, preprocess_val)
     sampler = None
     return DataInfo(dataloader=dataloader, sampler=sampler)
 
