@@ -6,7 +6,6 @@ import pickle
 
 import torch
 import numpy
-from retrieval_dataset import get_split_loader
 import time
 import numpy as np
 from collections import OrderedDict
