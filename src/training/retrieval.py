@@ -230,7 +230,7 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
 
 
 def retrieval_eval(model, data, epoch, args):
-    if 'coco-val' not in data and 'f30k-val' not in data:
+    if 'mscoco-val' not in data and 'f30k-val' not in data:
         return {}
     if args.retrieval_frequency == 0:
         return {}
@@ -242,8 +242,8 @@ def retrieval_eval(model, data, epoch, args):
 
 
     results = {}
-    if 'mscoco' in data:
-        ITresults, TIresults = run(model, data['mscoco'].dataloader, args)
+    if 'mscoco-val' in data:
+        ITresults, TIresults = run(model, data['mscoco-val'].dataloader, args)
         results['mscoco5k-ImageTextRetrieval-recall@1'] = ITresults[0]
         results['mscoco5k-ImageTextRetrieval-recall@5'] = ITresults[1]
         results['mscoco5k-ImageTextRetrieval-recall@10'] = ITresults[2]

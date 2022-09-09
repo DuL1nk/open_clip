@@ -522,9 +522,9 @@ def get_data(args, preprocess_fns, epoch=0):
         data["imagenet-v2"] = get_imagenet(args, preprocess_fns, "v2")
 
     if args.coco_val is not None:
-        data["mscoco"] = get_mscoco(args, preprocess_fns, "test")
+        data["mscoco-val"] = get_mscoco(args, preprocess_fns, "test")
 
     if args.f30k_val is not None:
-        data["f30k"] = get_f30k(args, preprocess_fns, "test")
+        data["f30k-val"] = get_f30k(args, preprocess_fns, "test")
 
     return data
