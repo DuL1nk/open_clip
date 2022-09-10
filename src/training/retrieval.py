@@ -42,14 +42,17 @@ def encode_data(model, dataloader, args):
     with torch.no_grad():
 
         for i, (images, captions, index, image_name) in tqdm(enumerate(dataloader)):
+
+            if images[-1].sum() == 0:
+                pdb.set_trace()
+
             batch_size = images.shape[0]
             captions = torch.cat([tokenize(c) for c in captions])
 
             images = images.to(args.device)
             captions = captions.to(args.device)
+
             with autocast():
-
-
                 if args.distributed and not args.horovod:
                     img_emb = model.module.encode_image(images)
                     cap_emb = model.module.encode_text(captions)
@@ -99,17 +102,16 @@ def run(model, dataloader, args):
     print('Images: %d, Captions: %d' %
           (img_embs.shape[0] / caps_per_image, cap_embs.shape[0]))
 
-    pdb.set_trace()
     r, rt = i2t(img_embs, cap_embs, return_ranks=True, npts=npts)
     ri, rti = t2i(img_embs, cap_embs, return_ranks=True, npts=npts)
     ar = (r[0] + r[1] + r[2]) / 3
     ari = (ri[0] + ri[1] + ri[2]) / 3
     rsum = r[0] + r[1] + r[2] + ri[0] + ri[1] + ri[2]
-    print("rsum: %.1f" % rsum)
-    print("Average i2t Recall: %.1f" % ar)
-    print("Image to text: %.1f %.1f %.1f %.1f %.1f" % r)
-    print("Average t2i Recall: %.1f" % ari)
-    print("Text to image: %.1f %.1f %.1f %.1f %.1f" % ri)
+    print("rsum: %.2f" % rsum)
+    print("Average i2t Recall: %.2f" % ar)
+    print("Image to text: %.2f %.2f %.2f %.2f %.2f" % r)
+    print("Average t2i Recall: %.2f" % ari)
+    print("Text to image: %.2f %.2f %.2f %.2f %.2f" % ri)
 
     return r, ri
 
@@ -218,6 +220,7 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
             top1[caps_per_image * index + i] = inds[i][0]
 
     # Compute metrics
+    pdb.set_trace()
     r1 = 100.0 * len(numpy.where(ranks < 1)[0]) / len(ranks)
     r5 = 100.0 * len(numpy.where(ranks < 5)[0]) / len(ranks)
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
