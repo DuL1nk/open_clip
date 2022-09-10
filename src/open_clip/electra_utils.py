@@ -1,4 +1,5 @@
 import pdb
+import random
 
 import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
@@ -35,10 +36,13 @@ def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
         else:
             words.append(pair[0])
 
-    if mask in words:
-        return ' '.join(words)
-    else:
-        return
+    if mask not in words:
+        num_indices = random.randint(1, len(words))
+        indices = random.sample(range(0, len(words)), num_indices)
+        for index in indices:
+            words[index] = mask
+
+    return ' '.join(words)
 
 
 def truncate_tokens(all_tokens, truncate_length, eot_token):
