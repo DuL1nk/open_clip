@@ -43,9 +43,6 @@ def encode_data(model, dataloader, args):
 
         for i, (images, captions, index, image_name) in tqdm(enumerate(dataloader)):
 
-            if images[-1].sum() == 0:
-                pdb.set_trace()
-
             batch_size = images.shape[0]
             captions = torch.cat([tokenize(c) for c in captions])
 
@@ -71,6 +68,7 @@ def encode_data(model, dataloader, args):
                     img_embs[i * batch_size + idx] = img_emb.data.cpu().numpy().copy()[idx]
                     cap_embs[i * batch_size + idx] = cap_emb.data.cpu().numpy().copy()[idx]
 
+        import pdb; pdb.set_trace()
         del images, captions
 
     return img_embs, cap_embs
@@ -220,7 +218,6 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
             top1[caps_per_image * index + i] = inds[i][0]
 
     # Compute metrics
-    pdb.set_trace()
     r1 = 100.0 * len(numpy.where(ranks < 1)[0]) / len(ranks)
     r5 = 100.0 * len(numpy.where(ranks < 5)[0]) / len(ranks)
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
