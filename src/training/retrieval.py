@@ -45,11 +45,8 @@ def encode_data(model, dataloader, args):
         for i, (images, captions, index, image_name) in tqdm(enumerate(dataloader)):
 
             batch_size = images.shape[0]
-
             images = images.to(args.device)
-            # captions = tokenize(captions).to(args.device)
-            import clip
-            captions = (torch.cat([clip.tokenize(c) for c in captions])).to(args.device)
+            captions = tokenize(captions).to(args.device)
 
             with autocast():
                 if args.distributed and not args.horovod:

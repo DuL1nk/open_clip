@@ -56,8 +56,8 @@ def run(model, classifier, dataloader, args):
             top5 += acc5
             n += images.size(0)
 
-    top1 = (top1 / n)
-    top5 = (top5 / n)
+    top1 = 100.0 * (top1 / n)
+    top5 = 100.0 * (top5 / n)
     return top1, top5
 
 
