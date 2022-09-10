@@ -245,6 +245,7 @@ class ClipLoss(nn.Module):
 
         # calculated ground-truth and cache if enabled
         num_logits = logits_per_image.shape[0]
+        print(num_logits)
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
             if self.world_size > 1 and self.local_loss:

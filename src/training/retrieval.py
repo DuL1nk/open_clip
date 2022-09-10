@@ -138,20 +138,10 @@ def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
     for index in range(npts):
 
         # Get query image
-        im = images[caps_per_image * index].reshape(1, images.shape[1])
+        queries = images[caps_per_image * index].reshape(1, images.shape[1])
 
         # Compute scores
-        if measure == 'order':
-            bs = 100
-            if index % bs == 0:
-                mx = min(images.shape[0], 5 * (index + bs))
-                im2 = images[5 * index:mx:5]
-                d2 = order_sim(torch.Tensor(im2).cuda(),
-                               torch.Tensor(captions).cuda())
-                d2 = d2.cpu().numpy()
-            d = d2[index % bs]
-        else:
-            d = numpy.dot(im, captions.T).flatten()
+        d = numpy.dot(queries, captions.T).flatten()
         inds = numpy.argsort(d)[::-1]
         index_list.append(inds[0])
 
@@ -201,18 +191,8 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         queries = captions[caps_per_image * index:caps_per_image * index + caps_per_image]
 
         # Compute scores
-        if measure == 'order':
-            bs = 100
-            if 5 * index % bs == 0:
-                mx = min(captions.shape[0], 5 * index + bs)
-                q2 = captions[5 * index:mx]
-                d2 = order_sim(torch.Tensor(ims).cuda(),
-                               torch.Tensor(q2).cuda())
-                d2 = d2.cpu().numpy()
 
-            d = d2[:, (5 * index) % bs:(5 * index) % bs + 5].T
-        else:
-            d = numpy.dot(queries, ims.T)
+        d = numpy.dot(queries, ims.T)
         inds = numpy.zeros(d.shape)
         for i in range(len(inds)):
             inds[i] = numpy.argsort(d[i])[::-1]
