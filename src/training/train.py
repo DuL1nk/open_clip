@@ -143,6 +143,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             # NOTE loss is coarsely sampled, just master node and per log update
             loss_m.update(total_loss.item(), batch_size)
             logit_scale_scalar = logit_scale.item()
+            logging.info(f'Log path: {args.name}')
             logging.info(
                 f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] "
                 f"Loss: {loss_m.val:#.5g} ({loss_m.avg:#.4g}) "
