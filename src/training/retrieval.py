@@ -63,7 +63,6 @@ def encode_data(model, dataloader, args):
                 # import pdb; pdb.set_trace()
                 # initialize the numpy arrays given the size of the embeddings
                 if img_embs is None:
-                    import pdb; pdb.set_trace()
                     img_embs = np.zeros((len(dataloader.dataset), img_emb.size(1)))
                     cap_embs = np.zeros((len(dataloader.dataset), cap_emb.size(1)))
 
@@ -72,7 +71,6 @@ def encode_data(model, dataloader, args):
                     img_embs[i * dataloader.batch_size + idx] = img_emb.data.cpu().numpy().copy()[idx]
                     cap_embs[i * dataloader.batch_size + idx] = cap_emb.data.cpu().numpy().copy()[idx]
 
-        import pdb; pdb.set_trace()
         del images, captions
 
     return img_embs, cap_embs
