@@ -69,8 +69,8 @@ def encode_data(model, dataloader, args):
 
                 # preserve the embeddings by copying from gpu and converting to numpy
                 for idx in range(batch_size):
-                    img_embs[i * batch_size + idx] = img_emb.data.cpu().numpy().copy()[idx]
-                    cap_embs[i * batch_size + idx] = cap_emb.data.cpu().numpy().copy()[idx]
+                    img_embs[i * dataloader.batch_size + idx] = img_emb.data.cpu().numpy().copy()[idx]
+                    cap_embs[i * dataloader.batch_size + idx] = cap_emb.data.cpu().numpy().copy()[idx]
 
         import pdb; pdb.set_trace()
         del images, captions
