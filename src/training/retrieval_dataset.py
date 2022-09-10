@@ -58,12 +58,12 @@ class GenericDataset(data.Dataset):
 
     def __len__(self):
 
-        return len(self.images)
+        # return len(self.images)
 
-        # if self.split == 'test' and self.data_name == 'mscoco':  # TO CHECK
-        #     return int(len(self.images) / 5)
-        # else:
-        #     return len(self.images)
+        if self.split == 'test' and self.data_name == 'mscoco':  # TO CHECK
+            return int(len(self.images) / 5)
+        else:
+            return len(self.images)
 
 
 #################
