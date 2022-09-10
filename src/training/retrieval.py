@@ -5,6 +5,7 @@ import pdb
 import pickle
 
 import torch
+import torch.nn.functional as F
 import numpy
 import time
 import numpy as np
@@ -57,9 +58,12 @@ def encode_data(model, dataloader, args):
                     img_emb = model.encode_image(images)
                     cap_emb = model.encode_text(captions)
 
+                img_emb = F.normalize(img_emb, dim=-1)
+                cap_emb = F.normalize(cap_emb, dim=-1)
                 # import pdb; pdb.set_trace()
                 # initialize the numpy arrays given the size of the embeddings
                 if img_embs is None:
+                    import pdb; pdb.set_trace()
                     img_embs = np.zeros((len(dataloader.dataset), img_emb.size(1)))
                     cap_embs = np.zeros((len(dataloader.dataset), cap_emb.size(1)))
 
