@@ -87,12 +87,14 @@ def run(model, dataloader, args):
 
 
     # evaluation
-    if args.data_name == 'wiki':
-        npts = 1
-        caps_per_image = 2
-    else:
-        npts = None
-        caps_per_image = 5
+    # if args.data_name == 'wiki':
+    #     npts = 1
+    #     caps_per_image = 2
+    # else:
+    #     npts = None
+    #     caps_per_image = 5
+    npts = None
+    caps_per_image = 5
 
     print('Images: %d, Captions: %d' %
           (img_embs.shape[0] / caps_per_image, cap_embs.shape[0]))
