@@ -227,44 +227,41 @@ class ClipLoss(nn.Module):
     def forward(self, image_features, text_features, logit_scale, image_aug_features=None, text_aug_features=None):
         device = image_features.device
         if self.world_size > 1:
-            print(1)
             all_image_features, all_text_features = gather_features(
                 image_features, text_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
-            print(2)
             all_image_aug_features, all_text_aug_features = gather_features(
                 image_aug_features, text_aug_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
-            print(3)
             if self.local_loss:
                 logits_per_image = logit_scale * image_features @ torch.cat([all_text_features, all_text_aug_features], dim=0).T
                 logits_per_text = logit_scale * text_features @ torch.cat([all_image_features, all_image_aug_features], dim=0).T
             else:
                 logits_per_image = logit_scale * all_image_features @ torch.cat([all_text_features, all_text_aug_features], dim=0).T
                 logits_per_text = logit_scale * all_text_features @ torch.cat([all_image_features, all_image_aug_features], dim=0).T
-            print(4)
         else:
             logits_per_image = logit_scale * image_features @ torch.cat([text_features, text_aug_features], dim=0).T
             logits_per_text = logit_scale * text_features @ torch.cat([image_features, image_aug_features], dim=0).T
 
         # calculated ground-truth and cache if enabled
-        print(5)
         num_logits = logits_per_image.shape[0]
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
             if self.world_size > 1 and self.local_loss:
-                print(6)
                 labels = labels + num_logits * self.rank
-                print(6.1)
             if self.cache_labels:
-                print(7)
                 self.labels[device] = labels
                 self.prev_num_logits = num_logits
-                print(7.1)
         else:
-            print(8)
             labels = self.labels[device]
-        print(9)
+
+        print(labels.device, labels.size())
+        print(labels)
+        print(logits_per_image.device, logits_per_image.size())
+        print(logits_per_image)
+        print(logits_per_text.device, logits_per_text.size())
+        print(logits_per_text)
+
         total_loss = (
             F.cross_entropy(logits_per_image, labels) +
             F.cross_entropy(logits_per_text, labels)
