@@ -248,21 +248,28 @@ class ClipLoss(nn.Module):
             logits_per_text = logit_scale * text_features @ torch.cat([image_features, image_aug_features], dim=0).T
 
         # calculated ground-truth and cache if enabled
+        print(5)
         num_logits = logits_per_image.shape[0]
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
             if self.world_size > 1 and self.local_loss:
+                print(6)
                 labels = labels + num_logits * self.rank
+                print(6.1)
             if self.cache_labels:
+                print(7)
                 self.labels[device] = labels
                 self.prev_num_logits = num_logits
+                print(7.1)
         else:
+            print(8)
             labels = self.labels[device]
-
+        print(9)
         total_loss = (
             F.cross_entropy(logits_per_image, labels) +
             F.cross_entropy(logits_per_text, labels)
             ) / 2
+        print(total_loss)
         return total_loss
 
 

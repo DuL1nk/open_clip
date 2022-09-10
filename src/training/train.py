@@ -86,7 +86,6 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
 
         with autocast():
             image_features, text_features, logit_scale = model(images, texts)
-            print()
             text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
             blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
             total_loss = loss(image_features, text_features, logit_scale, image_aug_features=blank_tensor, text_aug_features=text_aug_features)
