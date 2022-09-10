@@ -258,7 +258,6 @@ class ClipLoss(nn.Module):
 
         print(labels.device, labels.size())
         print(logits_per_image.device, logits_per_image.size())
-        print(logits_per_image)
         print(logits_per_text.device, logits_per_text.size())
         print(logits_per_text)
         print(labels[0])
