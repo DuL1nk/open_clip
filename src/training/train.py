@@ -74,19 +74,23 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         scheduler(step)
 
         input_images, input_texts = batch
+        print(len(input_images))
         texts = tokenize(input_texts, device=device)
         texts_aug = tokenize(input_texts, mask_prob=0.3, word_parsing_mask=True, generator=electra_generator, device=device, show_generation=False)
         images = input_images.to(device=device, non_blocking=True)
         texts = torch.cat([texts, texts_aug], dim=0)
+        print(texts_aug.size())
 
         data_time_m.update(time.time() - end)
         optimizer.zero_grad()
 
         with autocast():
             image_features, text_features, logit_scale = model(images, texts)
+            print()
             text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
             blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
             total_loss = loss(image_features, text_features, logit_scale, image_aug_features=blank_tensor, text_aug_features=text_aug_features)
+            print(total_loss)
 
             # FIXME: why loss differs between forward 1&2 with ddp
             # loss_forward 2
