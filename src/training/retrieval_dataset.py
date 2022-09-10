@@ -71,7 +71,7 @@ class GenericDataset(data.Dataset):
 def get_loader(transform, split, data_name, data_root_path, batch_size, num_workers):
     """Returns torch.utils.data.DataLoader for custom dataset."""
 
-    dataset = GenericDataset(transform, split, data_name,data_root_path)
+    dataset = GenericDataset(transform, split, data_name, data_root_path)
     # Data loader
     if split == 'train':
         data_loader = torch.utils.data.DataLoader(dataset=dataset,

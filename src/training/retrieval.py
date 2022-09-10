@@ -13,7 +13,7 @@ from collections import OrderedDict
 from PIL import Image
 from tqdm import tqdm
 from contextlib import suppress
-from open_clip.electra_utils import tokenize
+from open_clip import tokenize
 
 
 def order_sim(im, s):
@@ -44,6 +44,7 @@ def encode_data(model, dataloader, args):
 
         for i, (images, captions, index, image_name) in tqdm(enumerate(dataloader)):
 
+            pdb.set_trace()
             batch_size = images.shape[0]
             captions = torch.cat([tokenize(c) for c in captions])
 
@@ -148,7 +149,6 @@ def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
         # Score
         rank = 1e20
         for i in range(caps_per_image * index, caps_per_image * index + caps_per_image, 1):
-            pdb.set_trace()
             tmp = numpy.where(inds == i)[0][0]
             if tmp < rank:
                 rank = tmp
@@ -195,7 +195,6 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         d = numpy.dot(queries, ims.T)
         inds = numpy.zeros(d.shape)
         for i in range(len(inds)):
-            pdb.set_trace()
             inds[i] = numpy.argsort(d[i])[::-1]
             ranks[caps_per_image * index + i] = numpy.where(inds[i] == index)[0][0]
             top1[caps_per_image * index + i] = inds[i][0]
