@@ -245,7 +245,6 @@ class ClipLoss(nn.Module):
 
         # calculated ground-truth and cache if enabled
         num_logits = logits_per_image.shape[0]
-        print(num_logits)
         if self.prev_num_logits != num_logits or device not in self.labels:
             labels = torch.arange(num_logits, device=device, dtype=torch.long)
             if self.world_size > 1 and self.local_loss:
@@ -256,17 +255,10 @@ class ClipLoss(nn.Module):
         else:
             labels = self.labels[device]
 
-        print(labels.device, labels.size())
-        print(logits_per_image.device, logits_per_image.size())
-        print(logits_per_text.device, logits_per_text.size())
-        print(logits_per_text)
-        print(labels[0])
-
         total_loss = (
             F.cross_entropy(logits_per_image, labels) +
             F.cross_entropy(logits_per_text, labels)
             ) / 2
-        print(total_loss)
         return total_loss
 
 
