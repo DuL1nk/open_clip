@@ -54,6 +54,9 @@ def truncate_tokens(all_tokens, truncate_length, eot_token):
     return all_tokens
 
 def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, generator=None, gumbel_t=1., device='cpu', show_generation=False):
+
+    # Receive a list of sentences
+
     assert mask_prob or not generator, 'mask is required for enabling resample!'
     assert mask_prob or not word_parsing_mask, 'mask is required for enabling word parsing mask!'
 

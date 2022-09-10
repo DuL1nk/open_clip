@@ -38,7 +38,6 @@ def run(model, classifier, dataloader, args):
     with torch.no_grad():
         top1, top5, n = 0., 0., 0.
         for images, target in tqdm(dataloader, unit_scale=args.batch_size):
-            pdb.set_trace()
             images = images.to(args.device)
             target = target.to(args.device)
 
