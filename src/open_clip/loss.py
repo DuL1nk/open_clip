@@ -227,21 +227,22 @@ class ClipLoss(nn.Module):
     def forward(self, image_features, text_features, logit_scale, image_aug_features=None, text_aug_features=None):
         device = image_features.device
         if self.world_size > 1:
-
+            print(1)
             all_image_features, all_text_features = gather_features(
                 image_features, text_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
-
+            print(2)
             all_image_aug_features, all_text_aug_features = gather_features(
                 image_aug_features, text_aug_features,
                 self.local_loss, self.gather_with_grad, self.rank, self.world_size, self.use_horovod)
-
+            print(3)
             if self.local_loss:
                 logits_per_image = logit_scale * image_features @ torch.cat([all_text_features, all_text_aug_features], dim=0).T
                 logits_per_text = logit_scale * text_features @ torch.cat([all_image_features, all_image_aug_features], dim=0).T
             else:
                 logits_per_image = logit_scale * all_image_features @ torch.cat([all_text_features, all_text_aug_features], dim=0).T
                 logits_per_text = logit_scale * all_text_features @ torch.cat([all_image_features, all_image_aug_features], dim=0).T
+            print(4)
         else:
             logits_per_image = logit_scale * image_features @ torch.cat([text_features, text_aug_features], dim=0).T
             logits_per_text = logit_scale * text_features @ torch.cat([image_features, image_aug_features], dim=0).T
