@@ -53,7 +53,7 @@ def encode_data(model, dataloader, args):
             captions = tokenize(captions).to(args.device)
 
 
-        with autocast():
+            with autocast():
                 if args.distributed and not args.horovod:
                     img_emb = model.module.encode_image(images)
                     cap_emb = model.module.encode_text(captions)
