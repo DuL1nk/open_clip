@@ -16,6 +16,7 @@ from contextlib import suppress
 from open_clip import tokenize
 
 
+
 def order_sim(im, s):
     """Order embeddings similarity measure $max(0, s-im)$
     """
@@ -46,9 +47,11 @@ def encode_data(model, dataloader, args):
 
             batch_size = images.shape[0]
             images = images.to(args.device)
+
+            # For original CLIP evaluation
+            from open_clip.tokenizer import tokenize
             captions = tokenize(captions).to(args.device)
-            # import clip
-            # captions = (torch.cat([clip.tokenize(c) for c in captions])).to(args.device)
+
 
         with autocast():
                 if args.distributed and not args.horovod:
