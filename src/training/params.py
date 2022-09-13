@@ -296,6 +296,17 @@ def parse_args():
     parser.add_argument(
         "--norm_gradient_clip", type=float, default=None, help="Gradient clip."
     )
+    parser.add_argument(
+        "--mask-prob",
+        default=0.0,
+        help="The probability to mask every word in captions."
+    )
+    parser.add_argument(
+        "--word-parsing-mask",
+        default=False,
+        action='store_true',
+        help="Whether to mask specific words (n., adj.)."
+    )
     args = parser.parse_args()
 
     # If some params are not passed, we use the default values based on model name.
