@@ -298,6 +298,7 @@ def parse_args():
     )
     parser.add_argument(
         "--mask-prob",
+        type=float,
         default=0.0,
         help="The probability to mask every word in captions."
     )
