@@ -193,7 +193,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77, mask_type=N
    token_lengths = torch.ones(len(all_tokens), dtype=torch.long)
 
    for i, tokens in enumerate(all_tokens):
-       result[i, :len(tokens)] = tokens
+       result[i, :len(tokens)] = torch.tensor(tokens)
        token_lengths[i] = min(len(tokens), context_length)
        if mask_type is not None:
            labels[i, :len(tokens)] = all_labels[i]
