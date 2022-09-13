@@ -49,7 +49,7 @@ def encode_data(model, dataloader, args):
             images = images.to(args.device)
 
             # For original CLIP evaluation
-            from open_clip.tokenizer import tokenize
+            # from open_clip.tokenizer import tokenize
             captions = tokenize(captions).to(args.device)
 
 
