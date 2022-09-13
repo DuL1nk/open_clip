@@ -47,8 +47,10 @@ def encode_data(model, dataloader, args):
             batch_size = images.shape[0]
             images = images.to(args.device)
             captions = tokenize(captions).to(args.device)
+            # import clip
+            # captions = (torch.cat([clip.tokenize(c) for c in captions])).to(args.device)
 
-            with autocast():
+        with autocast():
                 if args.distributed and not args.horovod:
                     img_emb = model.module.encode_image(images)
                     cap_emb = model.module.encode_text(captions)
