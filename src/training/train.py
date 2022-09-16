@@ -14,7 +14,7 @@ try:
 except ImportError:
     wandb = None
 
-from open_clip import ClipLoss, tokenize
+from open_clip import ClipLoss, tokenize, electra_tokenize
 from .distributed import is_master
 from .zero_shot import zero_shot_eval
 from .retrieval import retrieval_eval
@@ -74,10 +74,11 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         scheduler(step)
 
         input_images, input_texts = batch
-        texts = tokenize(input_texts, device=device)
+        texts = tokenize(input_texts)
         if args.mask_prob:
-            texts_aug = tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, show_generation=False)
+            texts_aug = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, show_generation=False)
             texts = torch.cat([texts, texts_aug], dim=0)
+        texts = texts.to(device=device, non_blocking=True)
         images = input_images.to(device=device, non_blocking=True)
 
 
