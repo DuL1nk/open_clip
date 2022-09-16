@@ -64,7 +64,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
 
     # Receive a list of sentences
 
-    # assert mask_prob or not generator, 'mask is required for enabling resample!'
+    assert mask_prob or not generator, 'mask is required for enabling generation!'
     assert mask_prob or not word_parsing_mask, 'mask is required for enabling word parsing mask!'
     assert generator or not return_generation, 'generator is required for returning generation results!'
 
