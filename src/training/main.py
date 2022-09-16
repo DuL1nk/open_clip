@@ -255,13 +255,13 @@ def main():
         evaluate(model, data, start_epoch, args, writer)
         return
 
-    generator = electra_generator if args.text_aug else None
+    # generator = electra_generator if args.text_aug else None
     for epoch in range(start_epoch, args.epochs):
         if is_master(args):
             logging.info(f'Start epoch {epoch}')
 
         #import pdb; pdb.set_trace()
-        train_one_epoch(model, generator, data, epoch, optimizer, scaler, scheduler, args, writer)
+        train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2')):
