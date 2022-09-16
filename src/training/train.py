@@ -75,9 +75,12 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
 
         input_images, input_texts = batch
         texts = tokenize(input_texts)
-        if args.mask_prob:
-            texts_aug = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, show_generation=False)
+
+        if args.text_aug:
+            generated_texts = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
+            texts_aug = tokenize(generated_texts)
             texts = torch.cat([texts, texts_aug], dim=0)
+
         texts = texts.to(device=device, non_blocking=True)
         images = input_images.to(device=device, non_blocking=True)
 
@@ -88,8 +91,9 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         with autocast():
             image_features, text_features, logit_scale = model(images, texts)
             text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
-            blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
-            total_loss = loss(image_features, text_features, logit_scale, image_aug_features=blank_tensor, text_aug_features=text_aug_features)
+            image_features, image_aug_features = image_features[:args.batch_size], image_features[args.batch_size]
+            # blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
+            total_loss = loss(image_features, text_features, logit_scale, image_aug_features=image_aug_features, text_aug_features=text_aug_features)
 
 
             # FIXME: why loss differs between forward 1&2 with ddp

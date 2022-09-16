@@ -308,6 +308,19 @@ def parse_args():
         action='store_true',
         help="Whether to mask specific words (n., adj.)."
     )
+    parser.add_argument(
+        "--text_aug",
+        default=False,
+        action='store_true',
+        help="Whether to augment text."
+    )
+    parser.add_argument(
+        "--image_aug",
+        default=False,
+        action='store_true',
+        help="Whether to augment image."
+    )
+
     args = parser.parse_args()
 
     # If some params are not passed, we use the default values based on model name.

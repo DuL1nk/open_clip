@@ -30,18 +30,21 @@ def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
     text = nltk.wordpunct_tokenize(text)
     pos = nltk.pos_tag(text)
     words = []
+    t1 = time.time()
     for pair in pos:
         if pair[1] in mask_pos and np.random.random() < mask_prob:
             words.append(mask)
         else:
             words.append(pair[0])
-
+    t2 = time.time()
     if mask not in words:
         num_indices = random.randint(1, len(words))
         indices = random.sample(range(0, len(words)), num_indices)
         for index in indices:
             words[index] = mask
-
+    t3 = time.time()
+    print(f'mask costs{t2-t1}')
+    print(f'random costs{t3-t2}')
     return ' '.join(words)
 
 
@@ -63,6 +66,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
 
     assert mask_prob or not generator, 'mask is required for enabling resample!'
     assert mask_prob or not word_parsing_mask, 'mask is required for enabling word parsing mask!'
+    assert generator or not return_generation, 'generator is required for returning generation results!'
 
     unmask_flag = -1
     sot_token = tokenizer.encode('[CLS]')[1]
