@@ -53,7 +53,11 @@ def truncate_tokens(all_tokens, truncate_length, eot_token):
         all_tokens[i] = torch.tensor(tokens)
     return all_tokens
 
-def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, generator=None, gumbel_t=1., device='cpu', show_generation=False):
+
+
+
+
+def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, generator=None, gumbel_t=1., device='cpu', return_generation=False):
 
     # Receive a list of sentences
 
@@ -127,16 +131,17 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         generate = result.clone()
         generate[labels != unmask_flag] = sampled_tokens
 
-        if show_generation:
+        if return_generation:
             # pdb.set_trace()
             de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for tmp in generate]
-            if word_parsing_mask:
-                texts = [texts[i] for i in range(len(mask_texts)) if mask_texts[i]]
+            # if word_parsing_mask:
+            #     texts = [texts[i] for i in range(len(mask_texts)) if mask_texts[i]]
+            # for i in range(len(texts)):
+            #     print(texts[i])
+            #     print(de_texts[i])
+            #     print()
+            return de_texts
 
-            for i in range(len(texts)):
-                print(texts[i])
-                print(de_texts[i])
-                print()
         return generate
     if mask_prob:
         return result, labels, token_lengths
