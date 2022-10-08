@@ -5,6 +5,7 @@ import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
 from open_clip import MLMLoss
 from open_clip.mask_tokens import MaskTokens
+from open_clip.mask_tokens import SelectMaskTokensFromText
 import time
 import numpy as np
 
@@ -49,6 +50,7 @@ def parse_text_and_mask(text, mask_prob=0.3, mask='[MASK]'):
     return ' '.join(words)
 
 
+
 def truncate_tokens(all_tokens, truncate_length, eot_token):
     for i, tokens in enumerate(all_tokens):
         if len(tokens) > truncate_length:
@@ -83,13 +85,9 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         pdb.set_trace()
         for text in texts:
 
-            mask_text = parse_text_and_mask(text, mask_prob)
-            tokens = tokenizer.encode(mask_text)
+            tokens, labels = SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=mask_prob, sot_token=sot_token, eot_token=eot_token)
             all_tokens.append(tokens)
-
-            labels = tokenizer.encode(text)
-            labels[(np.array(tokens) != mask_token)] = unmask_flag
-
+            all_labels.append(labels)
 
     else:
         all_tokens = [tokenizer.encode(text) for text in texts]

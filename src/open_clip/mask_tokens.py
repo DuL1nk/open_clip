@@ -1,5 +1,6 @@
 import pdb
-
+import numpy as np
+import random
 import torch
 from typing import Tuple, List
 
@@ -37,3 +38,48 @@ def MaskTokens(tokens, mask_type, mask_token, special_tokens=None, tokenizer_len
     else:
         raise NotImplementedError(mask_type)
     return tokens, labels
+
+
+def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_token=1, eot_token=2, mask='[MASK]'):
+
+    mask_pos = ['NN', 'NNS', 'NNP', 'NNPS',
+                'JJ', 'JJR', 'JJS']
+
+    import nltk
+    text = nltk.wordpunct_tokenize(text)
+    pos = nltk.pos_tag(text)
+    pdb.set_trace()
+    raw_words = pos[0, :]
+    words = []
+    # t1 = time.time()
+    for pair in pos:
+        if pair[1] in mask_pos and np.random.random() < mask_prob:
+            words.append(mask)
+        else:
+            words.append(pair[0])
+    # t2 = time.time()
+    if mask not in words:
+        num_indices = random.randint(1, len(words))
+        indices = random.sample(range(0, len(words)), num_indices)
+        for index in indices:
+            words[index] = mask
+
+    tokens = [sot_token]
+    labels = [unmask_flag]
+    pdb.set_trace()
+    assert len(words) == len(raw_words)
+    for i in range(len(words)):
+        if words[i] == mask:
+            raw_token = tokenizer.encode(raw_words[i])
+            tokens += [tokenizer.encode(mask)] * len(raw_token)
+            labels += raw_token
+        else:
+            token = tokenizer.encode(words[i])
+            tokens += token
+            labels += unmask_flag * len(token)
+    tokens += eot_token
+    labels += unmask_flag
+
+    return tokens, labels
+
+
