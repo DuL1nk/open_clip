@@ -79,7 +79,12 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         mask_texts = [parse_text_and_mask(text, mask_prob) for text in texts]
         all_tokens = [tokenizer.encode(text) for text in mask_texts if text]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
-        all_labels = [torch.tensor((np.array(tokens) != mask_token) * unmask_flag) for tokens in all_tokens]
+        all_labels = []
+        for tokens in all_tokens:
+            pdb.set_trace()
+            labels = tokens.clone()
+            labels[(np.array(tokens) != mask_token)] = unmask_flag
+
     else:
         all_tokens = [tokenizer.encode(text) for text in texts]
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
