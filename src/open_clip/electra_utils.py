@@ -3,6 +3,7 @@ import random
 
 import torch
 from transformers import ElectraTokenizerFast, ElectraForMaskedLM
+from open_clip import MLMLoss
 from open_clip.mask_tokens import MaskTokens
 import time
 import numpy as np
@@ -135,6 +136,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         generate = result.clone()
         generate[labels != unmask_flag] = sampled_tokens
 
+
         if return_generation:
             # pdb.set_trace()
             de_texts = [tokenizer.decode(tmp).replace('[PAD]', '').replace('[SEP]', '').replace('[CLS]', '').strip(' ') for tmp in generate]
@@ -144,7 +146,8 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
             #     print(texts[i])
             #     print(de_texts[i])
             #     print()
-            return de_texts
+            return de_texts, generate, logits, labels, pad_token
+
 
         return generate
     if mask_prob:

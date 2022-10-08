@@ -263,4 +263,19 @@ class ClipLoss(nn.Module):
 
 
 
+def MLMLoss(logits, labels, ignore_index):
+    mlm_loss = F.cross_entropy(
+        logits,
+        labels,
+        ignore_index=ignore_index
+    )
 
+    return mlm_loss
+
+def DISCLoss(disc_logits, disc_labels):
+    disc_loss = F.binary_cross_entropy_with_logits(
+        disc_logits,
+        disc_labels
+    )
+
+    return disc_loss

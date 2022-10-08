@@ -2,6 +2,7 @@
 
 Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (c) 2021 OpenAI.
 """
+import pdb
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
@@ -393,6 +394,7 @@ class CLIP(nn.Module):
 
         self.text_projection = nn.Parameter(torch.empty(text_cfg.width, embed_dim))
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        self.discriminator_head = nn.Linear(1024, 1)
         self.register_buffer('attn_mask', self.build_attention_mask(), persistent=False)
 
         self.init_parameters()
@@ -451,6 +453,12 @@ class CLIP(nn.Module):
         x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
 
         return x
+
+    def discriminator(self, text):
+        text_features = self.encode_text(text)
+        pdb.set_trace()
+        text_logits = self.discriminator_head(text_features)
+        return text_logits
 
     def forward(self, image, text):
         if image is None:

@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import os
+import pdb
 import time
 from contextlib import suppress
 
@@ -14,7 +15,7 @@ try:
 except ImportError:
     wandb = None
 
-from open_clip import ClipLoss, tokenize, electra_tokenize
+from open_clip import ClipLoss, MLMLoss, DISCLoss, tokenize, electra_tokenize
 from .distributed import is_master
 from .zero_shot import zero_shot_eval
 from .retrieval import retrieval_eval
@@ -77,8 +78,11 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         texts = tokenize(input_texts)
 
         if args.text_aug:
-            generated_texts = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
+            pdb.set_trace()
+            generated_texts, gen_tokens, gen_logits, masked_labels, pad_token = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
             texts_aug = tokenize(generated_texts)
+            disc_input = texts_aug.clone()
+            disc_labels = (texts != disc_input).float().detach()
             texts = torch.cat([texts, texts_aug], dim=0)
 
         texts = texts.to(device=device, non_blocking=True)
@@ -93,7 +97,8 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             text_features, text_aug_features = text_features[:args.batch_size], text_features[args.batch_size:]
             image_features, image_aug_features = image_features[:args.batch_size], image_features[args.batch_size:]
             # blank_tensor = torch.Tensor(0, text_features.size(1)).to(device=device, non_blocking=True)
-            total_loss = loss(image_features, text_features, logit_scale, image_aug_features=image_aug_features, text_aug_features=text_aug_features)
+            infonce_loss = loss(image_features, text_features, logit_scale, image_aug_features=image_aug_features, text_aug_features=text_aug_features)
+
 
 
             # FIXME: why loss differs between forward 1&2 with ddp
@@ -113,6 +118,21 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
 
             # print(loss0, loss1, loss2)
 
+        if args.text_aug:
+            # get discriminator predictions of replaced / original
+            pdb.set_trace()
+            non_padded_indices = torch.nonzero(gen_logits != pad_token, as_tuple=True)
+
+            # get discriminator output and binary cross entropy loss
+            disc_logits = model.discriminator(disc_input)
+            disc_logits = disc_logits.reshape_as(disc_labels)
+
+            mlm_loss = MLMLoss(gen_logits, masked_labels, pad_token)
+            disc_loss = DISCLoss(disc_logits[non_padded_indices], disc_labels[non_padded_indices])
+
+            total_loss = infonce_loss + mlm_loss + disc_loss
+        else:
+            total_loss = infonce_loss
 
         if scaler is not None:
             scaler.scale(total_loss).backward()
