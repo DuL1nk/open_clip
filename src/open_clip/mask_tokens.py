@@ -68,10 +68,12 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
     assert len(words) == len(raw_words)
     for i in range(len(words)):
         if words[i] == mask:
+            pdb.set_trace()
             raw_token = tokenizer.encode(raw_words[i])[1:-1]
             tokens += tokenizer.encode(mask)[1:-1] * len(raw_token)
             labels += raw_token
         else:
+            pdb.set_trace()
             token = tokenizer.encode(words[i])[1:-1]
             tokens += token
             labels += [unmask_flag] * len(token)
