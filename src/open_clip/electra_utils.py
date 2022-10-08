@@ -84,7 +84,6 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
 
         pdb.set_trace()
         for text in texts:
-
             tokens, labels = SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=mask_prob, sot_token=sot_token, eot_token=eot_token)
             all_tokens.append(tokens)
             all_labels.append(labels)
