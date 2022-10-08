@@ -80,6 +80,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         all_tokens = []
         all_labels = []
 
+        pdb.set_trace()
         for text in texts:
 
             mask_text = parse_text_and_mask(text, mask_prob)
