@@ -48,8 +48,7 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
     import nltk
     text = nltk.wordpunct_tokenize(text)
     pos = nltk.pos_tag(text)
-    pdb.set_trace()
-    raw_words = pos[0, :]
+    raw_words = np.array(pos)[:, 0]
     words = []
     # t1 = time.time()
     for pair in pos:
