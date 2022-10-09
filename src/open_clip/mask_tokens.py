@@ -67,10 +67,6 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
     labels = [unmask_flag]
     assert len(words) == len(raw_words)
     for i in range(len(words)):
-        if len(tokens) >= context_length - 1:
-            tokens = tokens[:context_length - 1]
-            labels = labels[:context_length - 1]
-            break
         if words[i] == mask:
             raw_token = tokenizer.encode(raw_words[i])[1:-1]
             tokens += tokenizer.encode(mask)[1:-1] * len(raw_token)
@@ -79,6 +75,11 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
             token = tokenizer.encode(words[i])[1:-1]
             tokens += token
             labels += [unmask_flag] * len(token)
+        if len(tokens) >= context_length - 1:
+            tokens = tokens[:context_length - 1]
+            labels = labels[:context_length - 1]
+            break
+
     tokens += [eot_token]
     labels += [unmask_flag]
 
