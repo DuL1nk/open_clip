@@ -51,6 +51,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
 
     model.train()
+    electra_generator.train()
     loss = ClipLoss(
         batch_size=args.batch_size,
         local_loss=args.local_loss,

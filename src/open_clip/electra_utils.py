@@ -143,7 +143,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         sampled_logits = logits[labels != unmask_flag]
         sampled_tokens = gumbel_sample(sampled_logits, temperature=gumbel_t)
         generate = result.clone()
-        generate[labels != unmask_flag] = sampled_tokens
+        generate[labels != unmask_flag] = sampled_tokens.detach()
 
 
         if return_generation:
