@@ -67,7 +67,9 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
     labels = [unmask_flag]
     assert len(words) == len(raw_words)
     for i in range(len(words)):
-        if i == context_length - 1:
+        if len(tokens) >= context_length - 1:
+            tokens = tokens[:context_length - 1]
+            labels = labels[:context_length - 1]
             break
         if words[i] == mask:
             raw_token = tokenizer.encode(raw_words[i])[1:-1]
