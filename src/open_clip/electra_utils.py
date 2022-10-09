@@ -83,7 +83,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         all_labels = []
 
         for text in texts:
-            tokens, labels = SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=mask_prob, sot_token=sot_token, eot_token=eot_token)
+            tokens, labels = SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=mask_prob, sot_token=sot_token, eot_token=eot_token, context_length=context_length)
             all_tokens.append(tokens)
             all_labels.append(torch.tensor(labels))
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)

@@ -40,7 +40,7 @@ def MaskTokens(tokens, mask_type, mask_token, special_tokens=None, tokenizer_len
     return tokens, labels
 
 
-def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_token=1, eot_token=2, mask='[MASK]'):
+def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_token=1, eot_token=2, mask='[MASK]', context_length=77):
 
     mask_pos = ['NN', 'NNS', 'NNP', 'NNPS',
                 'JJ', 'JJR', 'JJS']
@@ -67,6 +67,8 @@ def SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=0.3, sot_to
     labels = [unmask_flag]
     assert len(words) == len(raw_words)
     for i in range(len(words)):
+        if i == context_length - 1:
+            break
         if words[i] == mask:
             raw_token = tokenizer.encode(raw_words[i])[1:-1]
             tokens += tokenizer.encode(mask)[1:-1] * len(raw_token)
