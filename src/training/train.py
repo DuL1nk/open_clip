@@ -78,7 +78,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
         texts = tokenize(input_texts)
 
         if args.text_aug:
-            pdb.set_trace()
+            # pdb.set_trace()
             generated_texts, gen_tokens, gen_logits, masked_labels = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
             texts_aug = tokenize(generated_texts)
 
@@ -92,9 +92,6 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             disc_logits = model.discriminator(disc_input)
             disc_logits = disc_logits.reshape_as(disc_labels)
             disc_loss = DISCLoss(disc_logits[non_padded_indices], disc_labels[non_padded_indices])
-
-
-
 
             texts = torch.cat([texts, texts_aug], dim=0)
 
@@ -132,9 +129,6 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             # print(loss0, loss1, loss2)
 
         if args.text_aug:
-
-
-
             total_loss = infonce_loss + mlm_loss + disc_loss
         else:
             total_loss = infonce_loss
