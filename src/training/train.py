@@ -79,10 +79,23 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
 
         if args.text_aug:
             pdb.set_trace()
-            generated_texts, gen_tokens, gen_logits, masked_labels, pad_token = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
+            generated_texts, gen_tokens, gen_logits, masked_labels = electra_tokenize(input_texts, mask_prob=args.mask_prob, word_parsing_mask=args.word_parsing_mask, generator=electra_generator, device=device, return_generation=True)
             texts_aug = tokenize(generated_texts)
+
+            # MLM loss
+            mlm_loss = MLMLoss(gen_logits, masked_labels, -1)
+
+            # Discriminate  loss
+            non_padded_indices = torch.nonzero(texts != 0, as_tuple=True)
             disc_input = texts_aug.clone()
-            disc_labels = (texts != disc_input).float().detach()
+            disc_labels = (texts != texts_aug).float().detach()
+            disc_logits = model.discriminator(disc_input)
+            disc_logits = disc_logits.reshape_as(disc_labels)
+            disc_loss = DISCLoss(disc_logits[non_padded_indices], disc_labels[non_padded_indices])
+
+
+
+
             texts = torch.cat([texts, texts_aug], dim=0)
 
         texts = texts.to(device=device, non_blocking=True)
@@ -119,16 +132,8 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             # print(loss0, loss1, loss2)
 
         if args.text_aug:
-            # get discriminator predictions of replaced / original
-            pdb.set_trace()
-            non_padded_indices = torch.nonzero(gen_logits != pad_token, as_tuple=True)
 
-            # get discriminator output and binary cross entropy loss
-            disc_logits = model.discriminator(disc_input)
-            disc_logits = disc_logits.reshape_as(disc_labels)
 
-            mlm_loss = MLMLoss(gen_logits, masked_labels, pad_token)
-            disc_loss = DISCLoss(disc_logits[non_padded_indices], disc_labels[non_padded_indices])
 
             total_loss = infonce_loss + mlm_loss + disc_loss
         else:

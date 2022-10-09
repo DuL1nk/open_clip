@@ -133,8 +133,10 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
             labels[i, :len(tokens)] = all_labels[i]
 
     result = result.to(device, non_blocking=True)
+    labels = labels.to(device, non_blocking=True)
 
     if generator:
+        pdb.set_trace()
         pad_mask = result != pad_token
         logits = generator(result, pad_mask)[0]
         sampled_logits = logits[labels != unmask_flag]
@@ -152,7 +154,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
             #     print(texts[i])
             #     print(de_texts[i])
             #     print()
-            return de_texts, generate, logits, labels, pad_token
+            return de_texts, generate, logits, labels
 
 
         return generate

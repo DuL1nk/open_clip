@@ -440,6 +440,7 @@ class CLIP(nn.Module):
         return self.visual(image)
 
     def encode_text(self, text):
+        pdb.set_trace()
         x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
 
         x = x + self.positional_embedding

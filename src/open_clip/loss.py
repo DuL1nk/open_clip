@@ -265,7 +265,7 @@ class ClipLoss(nn.Module):
 
 def MLMLoss(logits, labels, ignore_index):
     mlm_loss = F.cross_entropy(
-        logits,
+        logits.transpose(1,2),
         labels,
         ignore_index=ignore_index
     )
