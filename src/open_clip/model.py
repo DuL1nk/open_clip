@@ -394,7 +394,7 @@ class CLIP(nn.Module):
 
         self.text_projection = nn.Parameter(torch.empty(text_cfg.width, embed_dim))
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
-        self.discriminator_head = nn.Linear(1024, 1)
+        self.discriminator_head = nn.Linear(512, 1)
         self.register_buffer('attn_mask', self.build_attention_mask(), persistent=False)
 
         self.init_parameters()
@@ -439,8 +439,7 @@ class CLIP(nn.Module):
     def encode_image(self, image):
         return self.visual(image)
 
-    def encode_text(self, text):
-        pdb.set_trace()
+    def encode_text(self, text, token_embed=False):
         x = self.token_embedding(text)  # [batch_size, n_ctx, d_model]
 
         x = x + self.positional_embedding
@@ -448,6 +447,8 @@ class CLIP(nn.Module):
         x = self.transformer(x, attn_mask=self.attn_mask)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x)
+        if token_embed:
+            return x
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
@@ -456,8 +457,7 @@ class CLIP(nn.Module):
         return x
 
     def discriminator(self, text):
-        text_features = self.encode_text(text)
-        pdb.set_trace()
+        text_features = self.encode_text(text, token_embed=True)
         text_logits = self.discriminator_head(text_features)
         return text_logits
 
