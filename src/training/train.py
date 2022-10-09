@@ -89,7 +89,7 @@ def train_one_epoch(model, electra_generator, data, epoch, optimizer, scaler, sc
             non_padded_indices = torch.nonzero(texts != 0, as_tuple=True)
             disc_input = texts_aug.clone().to(device=device, non_blocking=True)
             disc_labels = (texts != texts_aug).float().detach().to(device=device, non_blocking=True)
-            disc_logits = model(disc_input, discriminator=True)
+            disc_logits = model(None, disc_input, discriminator=True)
             disc_logits = disc_logits.reshape_as(disc_labels)
             disc_loss = DISCLoss(disc_logits[non_padded_indices], disc_labels[non_padded_indices])
 
