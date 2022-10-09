@@ -85,7 +85,7 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
         for text in texts:
             tokens, labels = SelectMaskTokensFromText(text, tokenizer, unmask_flag, mask_prob=mask_prob, sot_token=sot_token, eot_token=eot_token)
             all_tokens.append(tokens)
-            all_labels.append(labels)
+            all_labels.append(torch.tensor(labels))
         all_tokens = truncate_tokens(all_tokens, context_length, eot_token)
     else:
         all_tokens = [tokenizer.encode(text) for text in texts]
@@ -126,14 +126,12 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
     labels = torch.ones(len(all_tokens), context_length, dtype=torch.long) * unmask_flag
     token_lengths = torch.ones(len(all_tokens), dtype=torch.long)
 
-    pdb.set_trace()
     for i, tokens in enumerate(all_tokens):
         result[i, :len(tokens)] = tokens
         token_lengths[i] = min(len(tokens), context_length)
         if mask_prob:
             labels[i, :len(tokens)] = all_labels[i]
 
-    pdb.set_trace()
     result = result.to(device, non_blocking=True)
 
     if generator:
