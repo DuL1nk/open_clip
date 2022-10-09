@@ -456,23 +456,25 @@ class CLIP(nn.Module):
 
         return x
 
-    def discriminator(self, text):
-        text_features = self.encode_text(text, token_embed=True)
-        text_logits = self.discriminator_head(text_features)
-        return text_logits
 
-    def forward(self, image, text):
-        if image is None:
-            return self.encode_text(text)
-        elif text is None:
-            return self.encode_image(image)
-        image_features = self.encode_image(image)
-        image_features = F.normalize(image_features, dim=-1)
 
-        text_features = self.encode_text(text)
-        text_features = F.normalize(text_features, dim=-1)
+    def forward(self, image, text, discriminator=False):
+        if discriminator:
+            text_features = self.encode_text(text, token_embed=True)
+            text_logits = self.discriminator_head(text_features)
+            return text_logits
+        else:
+            if image is None:
+                return self.encode_text(text)
+            elif text is None:
+                return self.encode_image(image)
+            image_features = self.encode_image(image)
+            image_features = F.normalize(image_features, dim=-1)
 
-        return image_features, text_features, self.logit_scale.exp()
+            text_features = self.encode_text(text)
+            text_features = F.normalize(text_features, dim=-1)
+
+            return image_features, text_features, self.logit_scale.exp()
 
 
 def convert_weights_to_fp16(model: nn.Module):

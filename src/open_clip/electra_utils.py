@@ -127,13 +127,11 @@ def tokenize(texts, context_length=77, mask_prob=0, word_parsing_mask=False, gen
     token_lengths = torch.ones(len(all_tokens), dtype=torch.long)
 
     for i, tokens in enumerate(all_tokens):
-        try:
-            result[i, :len(tokens)] = tokens
-            token_lengths[i] = min(len(tokens), context_length)
-            if mask_prob:
-                labels[i, :len(tokens)] = all_labels[i]
-        except:
-            pdb.set_trace()
+        result[i, :len(tokens)] = tokens
+        token_lengths[i] = min(len(tokens), context_length)
+        if mask_prob:
+            labels[i, :len(tokens)] = all_labels[i]
+
 
     result = result.to(device, non_blocking=True)
     labels = labels.to(device, non_blocking=True)
